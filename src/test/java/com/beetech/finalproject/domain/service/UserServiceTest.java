@@ -14,9 +14,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,13 +28,14 @@ public class UserServiceTest {
     @Test
     public void testCreateUser() {
         UserCreateDto userCreateDto = new UserCreateDto();
-        userCreateDto.setUsername("user_maven");
+        userCreateDto.setUsername("Riley");
         userCreateDto.setLoginId("huy.vinhnguyen@outlook.com");
         userCreateDto.setPassword(PasswordEncrypt.bcryptPassword("user"));
+        userCreateDto.setBirthDay("19960515");
 
         User user = new User();
         user.setUsername(userCreateDto.getUsername());
-        user.setBirthDay(LocalDate.parse(userCreateDto.getBirthDay(), DateTimeFormatter.ofPattern("yyyyMMdd")));
+        user.setBirthDay(CustomDateTimeFormatter.dateOfBirthFormatter(userCreateDto.getBirthDay()));
         user.setLoginId(userCreateDto.getLoginId());
         user.setPassword(userCreateDto.getPassword());
         user.setRole(Roles.USER.getRole());

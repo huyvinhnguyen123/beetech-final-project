@@ -2,14 +2,13 @@ package com.beetech.finalproject.web.controller;
 
 import com.beetech.finalproject.domain.entities.User;
 import com.beetech.finalproject.domain.service.UserService;
+import com.beetech.finalproject.exception.LockedAccountException;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
 import com.beetech.finalproject.web.dtos.user.UserLoginDto;
 import com.beetech.finalproject.web.security.JwtUtils;
-import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,14 +16,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -34,7 +33,6 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils JwtUtils;
     private final UserService userService;
-    private final MessageSource messageSource;
 
     /**
      * request create user
@@ -43,20 +41,25 @@ public class AuthenticationController {
      * @return - token when use is created
      */
     @PostMapping("/register")
-    public ResponseEntity createUser(@Valid @RequestBody UserCreateDto userCreateDto,
-                                     BindingResult bindingResult,
-                                     Locale locale) {
+    public ResponseEntity createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("Request creating user...");
+
+        // Check for validation errors in the input
         if (bindingResult.hasErrors()) {
-            List<String> errors = bindingResult.getAllErrors()
-                    .stream()
-                    .map(error -> messageSource.getMessage(error.getCode(), null, locale))
-                    .collect(Collectors.toList());
+            Map<String, String> errors = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
             return ResponseEntity.badRequest().body(errors);
         }
-        User createUser = userService.createUser(userCreateDto);
-        String token = JwtUtils.createToken(createUser); // for email verification
-        return ResponseEntity.status(HttpStatus.CREATED).body(token);
+
+        try {
+            User createUser = userService.createUser(userCreateDto);
+            String token = JwtUtils.createToken(createUser); // for email verification
+            return ResponseEntity.status(HttpStatus.CREATED).body(token);
+        } catch (LockedAccountException e) {
+            return ResponseEntity.badRequest().body("The email is already registered and the account is locked.");
+        }
     }
 
     /**
@@ -66,24 +69,33 @@ public class AuthenticationController {
      * @return - token when authentication is passed
      */
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid UserLoginDto userLoginDto) {
+    public ResponseEntity login(@RequestBody @Valid UserLoginDto userLoginDto, BindingResult bindingResult) {
         log.info("Request authenticating user...");
+
+        // Check for validation errors in the input
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errors.put(error.getField(), error.getDefaultMessage());
+            }
+            return ResponseEntity.badRequest().body(errors);
+        }
+
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 userLoginDto.getLoginId(),
                 userLoginDto.getPassword()
         );
 
-        // check error 403 & 401 status code when authenticate fail
         try {
-            // Use AuthenticationManager authenticate Authentication object
             Authentication login = authenticationManager.authenticate(authentication);
 
-            // Prepare to create JWT token from username or email
+            // Check if the user is deleted or locked
             User user = (User) login.getPrincipal();
+            if (user.getDeleteFlag() == 9 || !user.isAccountNonLocked()) {
+                log.error("User has been deleted or locked.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User has been deleted or locked.");
+            }
 
-            log.info("role:" + user.getAuthorities());
-
-            // Create JWT token
             String token = JwtUtils.createToken(user);
 
             log.info("create token success");

@@ -9,32 +9,36 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "cart")
-public class Cart {
+@Table(name = "order_detail")
+public class OrderDetail {
     @Id
-    @Column(name = "cart_id", nullable = false, updatable = false)
+    @Column(name = "order_detail_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long cartId;
+    private Long orderDetailId;
+
+    @Column(nullable = false)
+    private Integer quantity;
+
+    @Column(nullable = false)
+    private Double price;
 
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
-    @Column(name = "version_no", nullable = false)
-    private Double versionNo;
-
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "order_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
-    private User user;
+    private Order order;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private List<CartDetail> cartDetails;
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnoreProperties
+    private Product product;
 }

@@ -49,6 +49,7 @@ public class PasswordValidate implements ConstraintValidator<ValidPassword, Stri
     private void addErrorMessage(ConstraintValidatorContext context, String message) {
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(message)
+                .addPropertyNode("password")
                 .addConstraintViolation();
     }
 }

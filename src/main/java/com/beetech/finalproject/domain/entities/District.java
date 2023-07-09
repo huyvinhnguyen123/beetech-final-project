@@ -9,6 +9,8 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,7 +21,7 @@ public class District {
     @Id
     @Column(name = "district_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private String districtId;
+    private Long districtId;
 
     @Column(name = "district_name", nullable = false)
     private String districtName;
@@ -29,4 +31,7 @@ public class District {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
     private City city;
+
+    @OneToMany(mappedBy = "district", cascade = CascadeType.ALL)
+    private List<OrderShippingDetail> orderShippingDetails;
 }

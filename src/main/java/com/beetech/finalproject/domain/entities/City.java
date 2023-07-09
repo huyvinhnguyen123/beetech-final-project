@@ -18,11 +18,14 @@ public class City {
     @Id
     @Column(name = "city_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private String cityId;
+    private Long cityId;
 
     @Column(name = "city_name", nullable = false)
     private String cityName;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
     private List<District> districts;
+
+    @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
+    private List<OrderShippingDetail> orderShippingDetails;
 }

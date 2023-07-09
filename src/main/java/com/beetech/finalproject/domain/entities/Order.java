@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -16,18 +17,21 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "cart")
-public class Cart {
+@Table(name = "order")
+public class Order {
     @Id
-    @Column(name = "cart_id", nullable = false, updatable = false)
+    @Column(name = "order_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long cartId;
+    private Long orderId;
 
-    @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
+    @Column(name = "display_id", nullable = false)
+    private int displayId; // if 1 is display if 0 it's not
 
-    @Column(name = "version_no", nullable = false)
-    private Double versionNo;
+    @Column(name = "status", nullable = false)
+    private String status;
+
+    @Column(name = "order_date", nullable = false)
+    private LocalDate orderDate;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -35,6 +39,6 @@ public class Cart {
     @JsonIgnoreProperties
     private User user;
 
-    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
-    private List<CartDetail> cartDetails;
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    private List<OrderDetail> orderDetails;
 }

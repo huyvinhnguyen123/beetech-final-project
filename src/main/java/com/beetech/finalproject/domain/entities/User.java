@@ -46,6 +46,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Cart> carts;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Order> orders;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (StringUtils.hasText(role)) {

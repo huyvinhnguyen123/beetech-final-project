@@ -20,7 +20,7 @@ public class Product {
     @Id
     @Column(name = "product_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private int productId;
+    private Long productId;
 
     @Column(name = "sku", nullable = false)
     private String sku;
@@ -31,8 +31,8 @@ public class Product {
     @Column(name = "detail_info")
     private String detailInfo;
 
-    @Column(name = "price")
-    private double price;
+    @Column(name = "price", nullable = false)
+    private Double price;
 
     @Column(name = "delete_flag")
     private int deleteFlag = 0;
@@ -49,6 +49,9 @@ public class Product {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Category> categories;
 
-    @ManyToMany(mappedBy = "products")
-    private List<Cart> carts ;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<CartDetail> cartDetails;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    private List<OrderDetail> orderDetails;
 }

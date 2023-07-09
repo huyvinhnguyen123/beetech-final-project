@@ -20,7 +20,7 @@ public class ImageProduct {
     @Id
     @Column(name = "image_product_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private String imageCategoryId;
+    private Long imageCategoryId;
 
     @Column(name = "path", nullable = false)
     private String path;

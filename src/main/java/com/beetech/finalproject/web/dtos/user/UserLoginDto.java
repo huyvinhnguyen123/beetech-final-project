@@ -13,6 +13,7 @@ public class UserLoginDto {
     @NotNull
     @Email
     private String loginId; // loginId = email
+
     @NotNull
     @ValidPassword
     private String password;

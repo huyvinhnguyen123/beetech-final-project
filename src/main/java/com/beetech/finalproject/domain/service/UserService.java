@@ -3,6 +3,7 @@ package com.beetech.finalproject.domain.service;
 import com.beetech.finalproject.domain.entities.User;
 import com.beetech.finalproject.domain.enums.Roles;
 import com.beetech.finalproject.domain.repository.UserRepository;
+import com.beetech.finalproject.exception.LockedAccountException;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
 import com.beetech.finalproject.web.security.PasswordEncrypt;
@@ -10,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
 
 @Service
 @Slf4j
@@ -34,11 +33,11 @@ public class UserService {
         user.setPassword(PasswordEncrypt.bcryptPassword(userCreateDto.getPassword()));
         user.setRole(Roles.USER.getRole());
 
-        // check case if loginId is duplicate with current loginId(email)
-        // and this user is locked
+        // Check if loginId is duplicate with current loginId (email) and if this user is locked
         User existingUser = userRepository.findByLoginId(userCreateDto.getLoginId());
         if (existingUser != null && !existingUser.isAccountNonLocked()) {
-            log.error("email is existed and this email has been locked");
+            log.error("The email is already registered and the account is locked.");
+            throw new LockedAccountException("The email is already registered and the account is locked.");
         }
 
         userRepository.save(user);
