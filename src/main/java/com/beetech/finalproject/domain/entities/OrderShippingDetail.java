@@ -1,16 +1,11 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.beetech.finalproject.domain.entities.City;
-import com.beetech.finalproject.domain.entities.District;
-import com.beetech.finalproject.domain.entities.Order;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Setter
@@ -32,19 +27,16 @@ public class OrderShippingDetail {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
     private Order order;
 
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
     private City city;
 
     @ManyToOne
     @JoinColumn(name = "district_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
     private District district;
 }

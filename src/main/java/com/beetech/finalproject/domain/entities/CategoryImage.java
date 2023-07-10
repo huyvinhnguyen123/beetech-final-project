@@ -1,7 +1,5 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.beetech.finalproject.domain.entities.Category;
-import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
