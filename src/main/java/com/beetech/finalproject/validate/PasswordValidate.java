@@ -6,8 +6,8 @@ import jakarta.validation.ConstraintValidatorContext;
 public class PasswordValidate implements ConstraintValidator<ValidPassword, String> {
     private static final int MIN_LENGTH = 6;
     private static final int MAX_LENGTH = 32;
-    private static final String SIZE_VALID_MESSAGE = "ValidPassword.Size";
-    private static final String CONTENT_VALID_MESSAGE = "ValidPassword.Content";
+    private static final String SIZE_VALID_MESSAGE = "{ValidPassword.size}";
+    private static final String CONTENT_VALID_MESSAGE = "{ValidPassword.content}";
 
     @Override
     public void initialize(ValidPassword constraintAnnotation) {}
@@ -49,7 +49,6 @@ public class PasswordValidate implements ConstraintValidator<ValidPassword, Stri
     private void addErrorMessage(ConstraintValidatorContext context, String message) {
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(message)
-                .addPropertyNode("password")
                 .addConstraintViolation();
     }
 }

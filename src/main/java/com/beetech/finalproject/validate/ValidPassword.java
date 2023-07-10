@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = PasswordValidate.class)
 public @interface ValidPassword {
-    String message() default "ValidPassword";
+    String message() default "{ValidPassword}";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

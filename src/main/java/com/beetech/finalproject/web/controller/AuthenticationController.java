@@ -69,7 +69,7 @@ public class AuthenticationController {
      * @return - token when authentication is passed
      */
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Valid UserLoginDto userLoginDto, BindingResult bindingResult) {
+    public ResponseEntity login(@Valid @RequestBody UserLoginDto userLoginDto, BindingResult bindingResult) {
         log.info("Request authenticating user...");
 
         // Check for validation errors in the input
