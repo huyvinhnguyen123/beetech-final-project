@@ -1,6 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.beetech.finalproject.domain.entities.Order;
+import com.beetech.finalproject.domain.entities.ImageForProduct;
 import com.beetech.finalproject.domain.entities.Product;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
@@ -16,31 +16,22 @@ import org.hibernate.annotations.OnDeleteAction;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "order_detail")
-public class OrderDetail {
+@Table(name = "product_image")
+public class ProductImage {
     @Id
-    @Column(name = "order_detail_id", nullable = false, updatable = false)
+    @Column(name = "product_image_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long orderDetailId;
-
-    @Column(nullable = false)
-    private Integer quantity;
-
-    @Column(nullable = false)
-    private Double price;
-
-    @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
-
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
-    private Order order;
+    private Long productImageId;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
     private Product product;
+
+    @ManyToOne
+    @JoinColumn(name = "image_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonIgnoreProperties
+    private ImageForProduct imageForProduct;
 }

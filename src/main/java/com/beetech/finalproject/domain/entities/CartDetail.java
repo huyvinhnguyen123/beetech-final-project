@@ -1,5 +1,7 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.beetech.finalproject.domain.entities.Cart;
+import com.beetech.finalproject.domain.entities.Product;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

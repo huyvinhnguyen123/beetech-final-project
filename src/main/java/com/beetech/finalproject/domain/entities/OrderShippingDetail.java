@@ -1,5 +1,8 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.beetech.finalproject.domain.entities.City;
+import com.beetech.finalproject.domain.entities.District;
+import com.beetech.finalproject.domain.entities.Order;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

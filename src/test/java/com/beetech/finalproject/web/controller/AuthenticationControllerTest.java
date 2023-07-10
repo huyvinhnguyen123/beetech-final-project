@@ -3,10 +3,10 @@ package com.beetech.finalproject.web.controller;
 import com.beetech.finalproject.web.dtos.user.UserLoginDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,15 +23,15 @@ public class AuthenticationControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @Mock
     private AuthenticationManager authenticationManager;
 
     @Test
     public void testLogin() throws Exception {
         // Create a mock UserLoginDto object
         UserLoginDto userLoginDto = new UserLoginDto();
-        userLoginDto.setLoginId("testuser");
-        userLoginDto.setPassword("password");
+        userLoginDto.setLoginId("riley@example.com");
+        userLoginDto.setPassword("huyNV123");
 
         // Create a mock Authentication object
         Authentication authentication = new UsernamePasswordAuthenticationToken(

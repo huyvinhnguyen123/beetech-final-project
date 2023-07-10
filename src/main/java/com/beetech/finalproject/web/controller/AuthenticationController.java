@@ -81,12 +81,13 @@ public class AuthenticationController {
             return ResponseEntity.badRequest().body(errors);
         }
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                userLoginDto.getLoginId(),
-                userLoginDto.getPassword()
-        );
 
         try {
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                    userLoginDto.getLoginId(),
+                    userLoginDto.getPassword()
+            );
+
             Authentication login = authenticationManager.authenticate(authentication);
 
             // Check if the user is deleted or locked

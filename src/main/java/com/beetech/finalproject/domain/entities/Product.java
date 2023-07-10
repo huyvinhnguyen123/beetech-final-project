@@ -37,8 +37,8 @@ public class Product {
     @Column(name = "delete_flag")
     private int deleteFlag = 0;
 
-    @ManyToMany(mappedBy = "products")
-    private List<ImageProduct> imageProducts ;
+    @OneToMany(mappedBy = "product")
+    private List<ProductImage> productImages;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(

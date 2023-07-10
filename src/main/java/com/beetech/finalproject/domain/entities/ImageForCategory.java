@@ -13,19 +13,19 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "category")
-public class Category {
+@Table(name = "image_for_category")
+public class ImageForCategory {
     @Id
-    @Column(name = "category_id", nullable = false, updatable = false)
+    @Column(name = "image_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long categoryId;
+    private Long imageId;
 
-    @Column(name = "category_name", nullable = false)
-    private String categoryName;
+    @Column(name = "path", nullable = false)
+    private String path;
 
-    @ManyToMany(mappedBy = "categories")
-    private List<Product> products;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "imageForCategory")
     private List<CategoryImage> categoryImages;
 }

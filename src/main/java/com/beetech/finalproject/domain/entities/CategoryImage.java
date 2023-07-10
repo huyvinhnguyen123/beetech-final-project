@@ -1,7 +1,7 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.beetech.finalproject.domain.entities.Order;
-import com.beetech.finalproject.domain.entities.Product;
+import com.beetech.finalproject.domain.entities.Category;
+import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,31 +16,22 @@ import org.hibernate.annotations.OnDeleteAction;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "order_detail")
-public class OrderDetail {
+@Table(name = "category_image")
+public class CategoryImage {
     @Id
-    @Column(name = "order_detail_id", nullable = false, updatable = false)
+    @Column(name = "category_image_id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
-    private Long orderDetailId;
-
-    @Column(nullable = false)
-    private Integer quantity;
-
-    @Column(nullable = false)
-    private Double price;
-
-    @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
+    private Long categoryImageId;
 
     @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
-    private Order order;
+    private Category category;
 
     @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "image_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JsonIgnoreProperties
-    private Product product;
+    private ImageForCategory imageForCategory;
 }
