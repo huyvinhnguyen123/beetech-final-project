@@ -24,6 +24,10 @@ public class CategoryService {
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
 
+    // get directory from source
+    @Value("${file.upload.directory}")
+    private String uploadDirectory;
+
     /**
      * upload image for category
      *
@@ -32,16 +36,15 @@ public class CategoryService {
      */
     public String uploadFile(MultipartFile file){
         try{
-            String directoryPath = "D:/file/category/";
             String fileName = file.getOriginalFilename();
 
             // Check file extension
             String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
             if (!fileExtension.equalsIgnoreCase("jpg")) {
-                throw new ValidTypeException("Invalid file format. Only JPG files are allowed.");
+                throw new ValidFileExtensionException("Invalid file format. Only JPG files are allowed.");
             }
 
-            String destinationPath = directoryPath + fileName;
+            String destinationPath = uploadDirectory + fileName;
             File destination = new File(destinationPath);
             file.transferTo(destination);
 
