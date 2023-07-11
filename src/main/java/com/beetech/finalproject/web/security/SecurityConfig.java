@@ -33,16 +33,21 @@ public class SecurityConfig {
                         // for all request url inside this app
                         // for permitAll() any user, guest or customer can access this url
                         .requestMatchers("/","/products").permitAll()
-                        .requestMatchers("/api/v1/auth/register").permitAll()
-                        .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/login").permitAll()
+                        .requestMatchers("/api/admin/user/register").permitAll()
+                        .requestMatchers("/api/categories/cities").permitAll()
+                        .requestMatchers("/api/categories/districts").permitAll()
                 )
                 .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_USER and ROLE_ADMIN
                         // for all request in this url has role admin & user will be access
-                        .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN") // prepare for prefix ROLE_
+                        // prepare for prefix ROLE_
+                        .requestMatchers("/api/users/**").hasAnyRole("USER", "ADMIN")
                 )
                 .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_ADMIN
                         // for all request in this url has role admin will be access
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // prepare for prefix ROLE_
+                        // prepare for prefix ROLE_
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/add-category").hasRole("ADMIN")
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // create session
                 .authenticationProvider(authenticationProvider()) // provide username and password for authentication
