@@ -1,10 +1,15 @@
 package com.beetech.finalproject.web.controller;
 
+import com.beetech.finalproject.common.AuthException;
+import com.beetech.finalproject.common.DeleteFlag;
+import com.beetech.finalproject.common.ValidationException;
 import com.beetech.finalproject.domain.entities.User;
 import com.beetech.finalproject.domain.service.UserService;
 import com.beetech.finalproject.exception.LockedAccountException;
+import com.beetech.finalproject.web.common.ResponseDto;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
 import com.beetech.finalproject.web.dtos.user.UserLoginDto;
+import com.beetech.finalproject.web.response.LoginResponse;
 import com.beetech.finalproject.web.security.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @Slf4j
@@ -69,18 +75,13 @@ public class AuthenticationController {
      * @return - token when authentication is passed
      */
     @PostMapping("/login")
-    public ResponseEntity login(@Valid @RequestBody UserLoginDto userLoginDto, BindingResult bindingResult) {
+    public ResponseEntity<ResponseDto<Object>> login(@Valid @RequestBody UserLoginDto userLoginDto, BindingResult bindingResult) {
         log.info("Request authenticating user...");
 
         // Check for validation errors in the input
         if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
-            }
-            return ResponseEntity.badRequest().body(errors);
+           throw new ValidationException(bindingResult);
         }
-
 
         try {
             Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -92,19 +93,26 @@ public class AuthenticationController {
 
             // Check if the user is deleted or locked
             User user = (User) login.getPrincipal();
-            if (user.getDeleteFlag() == 9 || !user.isAccountNonLocked()) {
+            if (DeleteFlag.DELETED.getCode() == user.getDeleteFlag() || !user.isAccountNonLocked()) {
                 log.error("User has been deleted or locked.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User has been deleted or locked.");
+                throw new AuthException(AuthException.ErrorStatus.USER_DO_NOT_HAVE_PERMISSION);
             }
 
             String token = JwtUtils.createToken(user);
+            log.info("Create token success: {}", token);
+            String refreshToken = UUID.randomUUID().toString();
+            log.info("Create refresh token success: {}", refreshToken);
 
-            log.info("create token success");
-            log.info("token: " + token);
-            return ResponseEntity.ok(token);
+            LoginResponse loginResponse = LoginResponse.builder()
+                    .token(token)
+                    .refreshToken(refreshToken)
+                    .build();
+
+            log.info("Login successfully");
+            return ResponseEntity.ok(ResponseDto.build().withData(loginResponse));
         } catch (AuthenticationException e) {
             log.error("authentication failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("authentication failed");
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
 }
