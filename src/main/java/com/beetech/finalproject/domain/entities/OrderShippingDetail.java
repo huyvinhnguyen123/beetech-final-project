@@ -27,16 +27,13 @@ public class OrderShippingDetail {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonIgnoreProperties
     private Order order;
 
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)
-    @JsonIgnoreProperties
     private City city;
 
     @ManyToOne
     @JoinColumn(name = "district_id", nullable = false)
-    @JsonIgnoreProperties
     private District district;
 }

@@ -28,7 +28,7 @@ import java.util.Map;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("api/v1/auth")
+@RequestMapping("api")
 public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtils JwtUtils;
@@ -40,7 +40,7 @@ public class AuthenticationController {
      * @param userCreateDto - input user information
      * @return - token when use is created
      */
-    @PostMapping("/register")
+    @PostMapping("/admin/user/register")
     public ResponseEntity createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("Request creating user...");
 
@@ -81,7 +81,7 @@ public class AuthenticationController {
             return ResponseEntity.badRequest().body(errors);
         }
 
-
+        // check for authentication
         try {
             Authentication authentication = new UsernamePasswordAuthenticationToken(
                     userLoginDto.getLoginId(),

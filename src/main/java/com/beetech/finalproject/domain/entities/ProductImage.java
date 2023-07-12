@@ -24,12 +24,10 @@ public class ProductImage {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
     private ImageForProduct imageForProduct;
 }

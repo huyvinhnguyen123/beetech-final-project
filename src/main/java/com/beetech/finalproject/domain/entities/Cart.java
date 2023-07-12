@@ -32,7 +32,6 @@ public class Cart {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
     private User user;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)

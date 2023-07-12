@@ -29,7 +29,6 @@ public class District {
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
     private City city;
 
     @OneToMany(mappedBy = "district", cascade = CascadeType.ALL)
