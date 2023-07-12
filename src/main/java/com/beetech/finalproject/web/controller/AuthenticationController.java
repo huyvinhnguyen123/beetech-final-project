@@ -52,20 +52,11 @@ public class AuthenticationController {
 
         // Check for validation errors in the input
         if (bindingResult.hasErrors()) {
-            Map<String, String> errors = new HashMap<>();
-            for (FieldError error : bindingResult.getFieldErrors()) {
-                errors.put(error.getField(), error.getDefaultMessage());
-            }
-            return ResponseEntity.badRequest().body(errors);
+            throw new ValidationException(bindingResult);
         }
 
-        try {
-            User createUser = userService.createUser(userCreateDto);
-            String token = JwtUtils.createToken(createUser); // for email verification
-            return ResponseEntity.status(HttpStatus.CREATED).body(token);
-        } catch (LockedAccountException e) {
-            return ResponseEntity.badRequest().body("The email is already registered and the account is locked.");
-        }
+        userService.registerNewUser(userCreateDto);
+        return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
     }
 
     /**
