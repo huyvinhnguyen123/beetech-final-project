@@ -47,7 +47,7 @@ public class AuthenticationController {
      * @return - token when use is created
      */
     @PostMapping("/register")
-    public ResponseEntity createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
+    public ResponseEntity<ResponseDto<Object>> createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
         log.info("Request creating user...");
 
         // Check for validation errors in the input
