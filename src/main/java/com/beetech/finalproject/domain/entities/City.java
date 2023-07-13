@@ -1,6 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,9 +25,10 @@ public class City {
     private String cityName;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
-    @JsonManagedReference
+    @JsonIgnoreProperties
     private List<District> districts;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
     private List<OrderShippingDetail> orderShippingDetails;
 }

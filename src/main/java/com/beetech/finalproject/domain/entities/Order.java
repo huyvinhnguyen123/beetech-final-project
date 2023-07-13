@@ -33,6 +33,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties
     private User user;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)

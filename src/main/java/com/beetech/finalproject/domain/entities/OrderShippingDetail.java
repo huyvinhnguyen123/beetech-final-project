@@ -1,8 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,16 +27,16 @@ public class OrderShippingDetail {
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties
     private Order order;
 
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties
     private City city;
 
     @ManyToOne
     @JoinColumn(name = "district_id", nullable = false)
-    @JsonBackReference
+    @JsonIgnoreProperties
     private District district;
 }
