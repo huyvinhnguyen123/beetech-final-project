@@ -1,5 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +25,7 @@ public class City {
     private String cityName;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<District> districts;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)

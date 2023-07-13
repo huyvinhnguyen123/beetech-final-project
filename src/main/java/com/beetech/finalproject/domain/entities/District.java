@@ -1,6 +1,8 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,8 +31,10 @@ public class District {
     @ManyToOne
     @JoinColumn(name = "city_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
+    @JsonBackReference
     private City city;
 
     @OneToMany(mappedBy = "district", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<OrderShippingDetail> orderShippingDetails;
 }
