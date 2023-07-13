@@ -6,17 +6,21 @@ import com.beetech.finalproject.domain.service.CategoryService;
 import com.beetech.finalproject.domain.service.CityService;
 import com.beetech.finalproject.domain.service.DistrictService;
 import com.beetech.finalproject.web.common.ResponseDto;
+import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
 import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
 import com.beetech.finalproject.web.dtos.category.CategoryUpdateDto;
 import com.beetech.finalproject.web.dtos.city.CityDto;
 import com.beetech.finalproject.web.dtos.district.DistrictDto;
+import com.beetech.finalproject.web.response.CategoryResponse;
 import com.beetech.finalproject.web.response.CityResponse;
 import com.beetech.finalproject.web.response.DistrictResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,7 +51,7 @@ public class CategoryController {
             cityResponses.add(cityResponse);
 
             return ResponseEntity.ok(ResponseDto.build().withData(cityResponses));
-        } catch (AuthException e) {
+        } catch (AuthenticationException e) {
             log.error("Find all cities failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
@@ -68,10 +72,48 @@ public class CategoryController {
             districtResponses.add(districtResponse);
 
             return ResponseEntity.ok(ResponseDto.build().withData(districtResponses));
-        } catch (AuthException e) {
-            log.error("Find all cities failed: " + e.getMessage());
+        } catch (AuthenticationException e) {
+            log.error("Find all districts failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
 
+    @PostMapping(value = "/add-category",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseDto<Object>> createCategory(@RequestBody @ModelAttribute
+                                                                  CategoryCreateDto categoryCreateDto) {
+        log.info("request creating category");
+
+        try {
+            categoryService.createCategory(categoryCreateDto);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Find all categories failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<ResponseDto<Object>> findAllCategories() {
+        log.info("request finding all categories");
+        try {
+            List<CategoryRetrieveDto> categoryRetrieveDtos = (List<CategoryRetrieveDto>)
+                    categoryService.findAllCategories();
+
+            // add result inside response
+            List<CategoryResponse> categoryResponses = new ArrayList<>();
+            CategoryResponse categoryResponse =  CategoryResponse.builder()
+                    .categoryRetrieveDtos(categoryRetrieveDtos)
+                    .build();
+
+            categoryResponses.add(categoryResponse);
+
+            return ResponseEntity.ok(ResponseDto.build().withData(categoryResponses));
+        } catch (AuthenticationException e) {
+            log.error("Find all categories failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
 }

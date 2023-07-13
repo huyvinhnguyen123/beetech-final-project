@@ -45,8 +45,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_ADMIN
                         // for all request in this url has role admin will be access
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") // prepare for prefix ROLE_
+                        // prepare for prefix ROLE_
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/add-category").hasRole("ADMIN")
                 )
+                // For all others url need to be authenticated
+                .authorizeHttpRequests((requests) -> requests.anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // create session
                 .authenticationProvider(authenticationProvider()) // provide username and password for authentication
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // filter username and password with jwt token

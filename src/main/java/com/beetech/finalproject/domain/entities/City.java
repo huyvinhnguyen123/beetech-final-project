@@ -29,5 +29,6 @@ public class City {
     private List<District> districts;
 
     @OneToMany(mappedBy = "city", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
     private List<OrderShippingDetail> orderShippingDetails;
 }

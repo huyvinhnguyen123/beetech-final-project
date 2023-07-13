@@ -1,7 +1,7 @@
 -- User's Data
 -- password: huyNV123
 INSERT INTO user(user_id, username, birth_day, login_id, password, role, delete_flag) VALUES
-("c72a2272-9b52-4883-9df5-3a1f26a54bf2", "HuyNV", "1996-05-15", "riley@example.com", "$10$6bzc4nwi0odzCmAPLMjyi.SMPXAL3nqk.Mc2kUo.NuP/u7fEtEffe", "ROLE_USER", 1),
+("c72a2272-9b52-4883-9df5-3a1f26a54bf2", "Riley", "1996-05-15", "riley@example.com", "$10$6bzc4nwi0odzCmAPLMjyi.SMPXAL3nqk.Mc2kUo.NuP/u7fEtEffe", "ROLE_USER", 1),
 ("6d55c017-a4bc-479d-8f89-68cefe97cd2c", "Lumina", "1998-11-23", "lumina@example.com", "$2a$10$roQ1Fhc1QzlnfG4uTSEoq.ebzDzs2Yvhuih5tPKMdCC5lorcWCY4K", "ROLE_ADMIN", 1)
 -- OrderProduct's Data
 INSERT INTO order_product(order_id, display_id, order_date, status, user_id) VALUES
