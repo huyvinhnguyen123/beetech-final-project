@@ -6,15 +6,25 @@ import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
-import com.beetech.finalproject.exception.ValidTypeException;
+import com.beetech.finalproject.exception.ValidFileExtensionException;
+import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
+import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
+import com.beetech.finalproject.web.dtos.category.CategoryUpdateDto;
+import com.beetech.finalproject.web.dtos.category.ImageRetrieveDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -26,7 +36,7 @@ public class CategoryService {
 
     // get directory from source
     @Value("${file.upload.directory}")
-    private String uploadDirectory;
+    private String fileUploadDirectory;
 
     /**
      * upload image for category
@@ -34,8 +44,8 @@ public class CategoryService {
      * @param file - input image(only accept .jpg)
      * @return url
      */
-    public String uploadFile(MultipartFile file){
-        try{
+    public String uploadFile(MultipartFile file) {
+        try {
             String fileName = file.getOriginalFilename();
 
             // Check file extension
@@ -44,34 +54,43 @@ public class CategoryService {
                 throw new ValidFileExtensionException("Invalid file format. Only JPG files are allowed.");
             }
 
-            String destinationPath = uploadDirectory + fileName;
+            // Get the value of the file.upload.directory property
+            String uploadDirectory = "upload/category";
+
+            // Create the upload directory if it doesn't exist
+            Path uploadDirectoryPath = Paths.get(uploadDirectory);
+            if (!Files.exists(uploadDirectoryPath)) {
+                Files.createDirectories(uploadDirectoryPath);
+            }
+
+            String destinationPath = uploadDirectory + File.separator + fileName;
             File destination = new File(destinationPath);
             file.transferTo(destination);
 
-            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf("/") + 1);
+            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {
             return "Failed to upload file: " + e.getMessage();
         }
     }
 
+
     /**
      * create new category
      *
-     * @param categoryName - input category's name
-     * @param file - input image
+     * @param categoryCreateDto - input categoryCreateDto's properties
      * @return - category
      */
     @Transactional
-    public Category createCategory(String categoryName, MultipartFile file) {
+    public Category createCategory(CategoryCreateDto categoryCreateDto) {
         Category category = new Category();
-        category.setCategoryName(categoryName);
+        category.setCategoryName(categoryCreateDto.getCategoryName());
         categoryRepository.save(category);
         log.info("Save new category success!");
 
         ImageForCategory imageForCategory = new ImageForCategory();
-        imageForCategory.setPath(uploadFile(file));
-        imageForCategory.setName(file.getOriginalFilename());
+        imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
+        imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");
 
@@ -85,5 +104,38 @@ public class CategoryService {
         return category;
     }
 
+    /**
+     * find all categories
+     *
+     * @return
+     */
+    public Iterable<CategoryRetrieveDto> findAllCategories() {
+        List<CategoryRetrieveDto> categoryRetrieveDtos = new ArrayList<>();
 
+        List<Category> categories = categoryRepository.findAllCategories();
+        for (Category c : categories) {
+            CategoryRetrieveDto categoryRetrieveDto = new CategoryRetrieveDto();
+            categoryRetrieveDto.setCategoryId(c.getCategoryId());
+            categoryRetrieveDto.setCategoryName(c.getCategoryName());
+
+            List<ImageForCategory> imageForCategories = new ArrayList<>();
+            for (CategoryImage ci : c.getCategoryImages()) {
+                imageForCategories.add(ci.getImageForCategory());
+            }
+
+            List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
+            for(ImageForCategory ifc: imageForCategories) {
+                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
+                imageRetrieveDto.setName(ifc.getName());
+                imageRetrieveDto.setPath(ifc.getPath());
+                imageRetrieveDtos.add(imageRetrieveDto);
+            }
+
+            categoryRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
+            categoryRetrieveDtos.add(categoryRetrieveDto);
+        }
+
+        log.info("find all categories success!");
+        return categoryRetrieveDtos;
+    }
 }
