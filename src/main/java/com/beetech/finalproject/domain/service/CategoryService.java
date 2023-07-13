@@ -55,7 +55,7 @@ public class CategoryService {
             }
 
             // Get the value of the file.upload.directory property
-            String uploadDirectory = "upload/category";
+            String uploadDirectory = "src/main/resources/upload/category";
 
             // Create the upload directory if it doesn't exist
             Path uploadDirectoryPath = Paths.get(uploadDirectory);
@@ -63,10 +63,9 @@ public class CategoryService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
-            String destinationPath = uploadDirectory + File.separator + fileName;
-            File destination = new File(destinationPath);
-            file.transferTo(destination);
+           Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
+            String destinationPath = uploadDirectory + File.separator + fileName;
             String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {

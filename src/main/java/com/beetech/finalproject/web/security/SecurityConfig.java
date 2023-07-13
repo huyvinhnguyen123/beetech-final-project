@@ -33,6 +33,7 @@ public class SecurityConfig {
                         // for all request url inside this app
                         // for permitAll() any user, guest or customer can access this url
                         .requestMatchers("/","/products").permitAll()
+                        .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/api/v1/auth/register").permitAll()
                         .requestMatchers("/api/v1/auth/login").permitAll()
                 )
