@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 @RequiredArgsConstructor
-@RequestMapping("api/users")
+@RequestMapping("api/v1/users")
 public class UserController {
 }

@@ -1,5 +1,7 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.beetech.finalproject.common.DeleteFlag;
+import com.beetech.finalproject.common.LockFlag;
 import com.google.common.collect.Lists;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -39,7 +41,11 @@ public class User implements UserDetails {
     @Column(name = "password", length = 255, nullable = false)
     private String password;
 
-    private int deleteFlag = 1;
+    @Column(name = "log_flag", nullable = false, columnDefinition = "TINYINT")
+    private int logFlag;
+
+    @Column(name = "delete_flag", nullable = false, columnDefinition = "TINYINT")
+    private int deleteFlag;
 
     private String role;
 
@@ -75,7 +81,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return logFlag == LockFlag.NON_LOCK.getCode();
     }
 
     @Override
@@ -85,6 +91,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return deleteFlag == DeleteFlag.NON_DELETE.getCode();
     }
 }
