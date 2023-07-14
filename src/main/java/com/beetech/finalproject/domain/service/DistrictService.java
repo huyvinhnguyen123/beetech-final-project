@@ -1,6 +1,5 @@
 package com.beetech.finalproject.domain.service;
 
-import com.beetech.finalproject.domain.entities.City;
 import com.beetech.finalproject.domain.entities.District;
 import com.beetech.finalproject.domain.repository.DistrictRepository;
 import com.beetech.finalproject.web.dtos.district.DistrictDto;

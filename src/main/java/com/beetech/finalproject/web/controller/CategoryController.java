@@ -39,6 +39,7 @@ public class CategoryController {
     @GetMapping("/categories/cities")
     public ResponseEntity<ResponseDto<Object>> findAllCities() {
         log.info("request finding all cities");
+
         try {
             List<CityDto> cityDtos = (List<CityDto>) cityService.findAllCities();
 
@@ -60,6 +61,7 @@ public class CategoryController {
     @GetMapping("/categories/districts")
     public ResponseEntity<ResponseDto<Object>> findAllDistrictsByCity(@RequestParam Long cityId) {
         log.info("request finding all districts");
+
         try {
             List<DistrictDto> districtDtos = (List<DistrictDto>) districtService.findAllDistrictsByCity(cityId);
 
@@ -94,6 +96,7 @@ public class CategoryController {
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
+
 
     @GetMapping("/categories")
     public ResponseEntity<ResponseDto<Object>> findAllCategories() {

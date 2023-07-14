@@ -6,7 +6,6 @@ import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
-import com.beetech.finalproject.exception.NotFoundException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
 import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
@@ -37,7 +36,7 @@ public class CategoryService {
 
     // get directory from source
     @Value("${file.upload.directory}")
-    private String uploadDirectory;
+    private String fileUploadDirectory;
 
     /**
      * upload image for category
@@ -45,8 +44,8 @@ public class CategoryService {
      * @param file - input image(only accept .jpg)
      * @return url
      */
-    public String uploadFile(MultipartFile file){
-        try{
+    public String uploadFile(MultipartFile file) {
+        try {
             String fileName = file.getOriginalFilename();
 
             // Check file extension
@@ -55,18 +54,19 @@ public class CategoryService {
                 throw new ValidFileExtensionException("Invalid file format. Only JPG files are allowed.");
             }
 
-            // Create the directory if it doesn't exist
+            // Get the value of the file.upload.directory property
+            String uploadDirectory = "src/main/resources/upload/category";
+
+            // Create the upload directory if it doesn't exist
             Path uploadDirectoryPath = Paths.get(uploadDirectory);
             if (!Files.exists(uploadDirectoryPath)) {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
-            String destinationPath = uploadDirectory + fileName;
-            File destination = new File(destinationPath);
-            file.transferTo(destination);
+           Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
-            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf("/") + 1);
-            System.out.println(fileUrl);
+            String destinationPath = uploadDirectory + File.separator + fileName;
+            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {
             return "Failed to upload file: " + e.getMessage();
@@ -127,12 +127,10 @@ public class CategoryService {
                 ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
                 imageRetrieveDto.setName(ifc.getName());
                 imageRetrieveDto.setPath(ifc.getPath());
-
                 imageRetrieveDtos.add(imageRetrieveDto);
             }
 
             categoryRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
-
             categoryRetrieveDtos.add(categoryRetrieveDto);
         }
 
