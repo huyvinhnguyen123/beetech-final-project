@@ -47,7 +47,8 @@ public class AuthenticationController {
      * @return - token when use is created
      */
     @PostMapping("/register")
-    public ResponseEntity<ResponseDto<Object>> createUser(@Valid @RequestBody UserCreateDto userCreateDto, BindingResult bindingResult) {
+    public ResponseEntity<ResponseDto<Object>> createUser(@Valid @RequestBody UserCreateDto userCreateDto,
+                                                          BindingResult bindingResult) {
         log.info("Request creating user...");
 
         // Check for validation errors in the input
@@ -66,7 +67,8 @@ public class AuthenticationController {
      * @return - token when authentication is passed
      */
     @PostMapping("/login")
-    public ResponseEntity<ResponseDto<Object>> login(@Valid @RequestBody UserLoginDto userLoginDto, BindingResult bindingResult) {
+    public ResponseEntity<ResponseDto<Object>> login(@Valid @RequestBody UserLoginDto userLoginDto,
+                                                     BindingResult bindingResult) {
         log.info("Request authenticating user...");
 
         // Check for validation errors in the input

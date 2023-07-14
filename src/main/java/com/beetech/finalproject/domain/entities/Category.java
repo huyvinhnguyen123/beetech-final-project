@@ -1,5 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,8 +25,10 @@ public class Category {
     private String categoryName;
 
     @ManyToMany(mappedBy = "categories")
+    @JsonIgnoreProperties
     private List<Product> products;
 
     @OneToMany(mappedBy = "category")
+    @JsonIgnoreProperties
     private List<CategoryImage> categoryImages;
 }

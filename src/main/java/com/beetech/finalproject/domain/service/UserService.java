@@ -6,14 +6,12 @@ import com.beetech.finalproject.common.LockFlag;
 import com.beetech.finalproject.domain.entities.User;
 import com.beetech.finalproject.domain.enums.Roles;
 import com.beetech.finalproject.domain.repository.UserRepository;
-import com.beetech.finalproject.exception.LockedAccountException;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
 import com.beetech.finalproject.web.security.PasswordEncrypt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -38,7 +36,6 @@ public class UserService {
      * @param userCreateDto - input userCreateDTO properties
      * @return - user
      */
-//    @Transactional // not need to add Transaction here because there is only 1 action that change db
     public User createUser(UserCreateDto userCreateDto) {
         User user = new User();
         user.setLoginId(userCreateDto.getLoginId());
