@@ -13,7 +13,6 @@ import com.beetech.finalproject.web.dtos.category.CategoryUpdateDto;
 import com.beetech.finalproject.web.dtos.category.ImageRetrieveDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,10 +33,6 @@ public class CategoryService {
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
 
-    // get directory from source
-    @Value("${file.upload.directory}")
-    private String fileUploadDirectory;
-
     /**
      * upload image for category
      *
@@ -55,7 +50,7 @@ public class CategoryService {
             }
 
             // Get the value of the file.upload.directory property
-            String uploadDirectory = "upload/category";
+            String uploadDirectory = "src/main/resources/upload/category";
 
             // Create the upload directory if it doesn't exist
             Path uploadDirectoryPath = Paths.get(uploadDirectory);
@@ -63,10 +58,9 @@ public class CategoryService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
-            String destinationPath = uploadDirectory + File.separator + fileName;
-            File destination = new File(destinationPath);
-            file.transferTo(destination);
+            Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
+            String destinationPath = uploadDirectory + File.separator + fileName;
             String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {
@@ -74,6 +68,22 @@ public class CategoryService {
         }
     }
 
+    /**
+     * delete image that's exist in folder
+     *
+     * @param fileUrl - input file url from upload file
+     */
+    public void deleteFile(String fileUrl) {
+        try {
+            Path filePath = Paths.get(fileUrl);
+            Files.delete(filePath);
+            log.info("delete image in folder success!");
+        } catch (IOException e) {
+            // Handle the exception or log the error message
+            e.printStackTrace();
+            log.error("fail to delete file");
+        }
+    }
 
     /**
      * create new category
@@ -137,5 +147,49 @@ public class CategoryService {
 
         log.info("find all categories success!");
         return categoryRetrieveDtos;
+    }
+
+    /**
+     * update category
+     *
+     * @param categoryId - input categoryId
+     * @param categoryUpdateDto - input categoryUpdateDto
+     * @return
+     */
+    public Category updateCategory(Long categoryId, CategoryUpdateDto categoryUpdateDto) {
+        Category existingCategory = categoryRepository.findById(categoryId).orElseThrow(
+                () -> {
+                    log.error("Not found this category");
+                    return new NullPointerException("Not found this category: " + categoryId);
+                }
+        );
+        log.info("Found this category");
+
+        existingCategory.setCategoryName(categoryUpdateDto.getCategoryName());
+        categoryRepository.save(existingCategory);
+
+        if(categoryUpdateDto.getImage() != null || !categoryUpdateDto.getImage().isEmpty() ) {
+            for(CategoryImage ci: existingCategory.getCategoryImages()) {
+                deleteFile(ci.getImageForCategory().getPath());
+                categoryImageRepository.deleteById(ci.getCategoryImageId());
+                log.info("delete category image success!");
+                imageForCategoryRepository.deleteById(ci.getImageForCategory().getImageId());
+                log.info("delete image for category success!");
+            }
+
+            ImageForCategory imageForCategory = new ImageForCategory();
+            imageForCategory.setPath(uploadFile(categoryUpdateDto.getImage()));
+            imageForCategory.setName(categoryUpdateDto.getImage().getOriginalFilename());
+            imageForCategoryRepository.save(imageForCategory);
+            log.info("Save new image for category success!");
+
+            CategoryImage categoryImage = new CategoryImage();
+            categoryImage.setCategory(existingCategory);
+            categoryImage.setImageForCategory(imageForCategory);
+            categoryImageRepository.save(categoryImage);
+            log.info("Save new category and image success!");
+        }
+        log.info("Create category success!");
+        return existingCategory;
     }
 }
