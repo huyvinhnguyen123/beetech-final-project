@@ -6,6 +6,7 @@ import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
+import com.beetech.finalproject.exception.DuplicateException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
 import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
@@ -13,7 +14,6 @@ import com.beetech.finalproject.web.dtos.category.CategoryUpdateDto;
 import com.beetech.finalproject.web.dtos.category.ImageRetrieveDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,10 +33,6 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
-
-    // get directory from source
-    @Value("${file.upload.directory}")
-    private String fileUploadDirectory;
 
     /**
      * upload image for category
@@ -63,7 +59,7 @@ public class CategoryService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
-           Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
+            Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
             String destinationPath = uploadDirectory + File.separator + fileName;
             String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
@@ -73,6 +69,22 @@ public class CategoryService {
         }
     }
 
+    /**
+     * delete image that's exist in folder
+     *
+     * @param fileUrl - input file url from upload file
+     */
+    public void deleteFile(String fileUrl) {
+        try {
+            Path filePath = Paths.get(fileUrl);
+            Files.delete(filePath);
+            log.info("delete image in folder success!");
+        } catch (IOException e) {
+            // Handle the exception or log the error message
+            e.printStackTrace();
+            log.error("fail to delete file");
+        }
+    }
 
     /**
      * create new category
@@ -90,6 +102,15 @@ public class CategoryService {
         ImageForCategory imageForCategory = new ImageForCategory();
         imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
         imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
+
+        List<ImageForCategory> imageForCategories = imageForCategoryRepository.findAll();
+        for(ImageForCategory ifc: imageForCategories) {
+            if(ifc.getPath().equals(imageForCategory.getPath())) {
+                log.error("Image path is already existed in folder");
+                throw new DuplicateException("Image path is already existed in folder, Try change image's name");
+            }
+        }
+
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");
 
@@ -101,40 +122,5 @@ public class CategoryService {
 
         log.info("Create category success!");
         return category;
-    }
-
-    /**
-     * find all categories
-     *
-     * @return
-     */
-    public Iterable<CategoryRetrieveDto> findAllCategories() {
-        List<CategoryRetrieveDto> categoryRetrieveDtos = new ArrayList<>();
-
-        List<Category> categories = categoryRepository.findAllCategories();
-        for (Category c : categories) {
-            CategoryRetrieveDto categoryRetrieveDto = new CategoryRetrieveDto();
-            categoryRetrieveDto.setCategoryId(c.getCategoryId());
-            categoryRetrieveDto.setCategoryName(c.getCategoryName());
-
-            List<ImageForCategory> imageForCategories = new ArrayList<>();
-            for (CategoryImage ci : c.getCategoryImages()) {
-                imageForCategories.add(ci.getImageForCategory());
-            }
-
-            List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
-            for(ImageForCategory ifc: imageForCategories) {
-                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
-                imageRetrieveDto.setName(ifc.getName());
-                imageRetrieveDto.setPath(ifc.getPath());
-                imageRetrieveDtos.add(imageRetrieveDto);
-            }
-
-            categoryRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
-            categoryRetrieveDtos.add(categoryRetrieveDto);
-        }
-
-        log.info("find all categories success!");
-        return categoryRetrieveDtos;
     }
 }

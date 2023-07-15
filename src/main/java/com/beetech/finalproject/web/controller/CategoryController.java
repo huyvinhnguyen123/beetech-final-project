@@ -1,7 +1,6 @@
 package com.beetech.finalproject.web.controller;
 
 import com.beetech.finalproject.common.AuthException;
-import com.beetech.finalproject.domain.entities.Category;
 import com.beetech.finalproject.domain.service.CategoryService;
 import com.beetech.finalproject.domain.service.CityService;
 import com.beetech.finalproject.domain.service.DistrictService;
@@ -16,13 +15,11 @@ import com.beetech.finalproject.web.response.CityResponse;
 import com.beetech.finalproject.web.response.DistrictResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,31 +89,9 @@ public class CategoryController {
             categoryService.createCategory(categoryCreateDto);
             return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
         } catch (AuthenticationException e) {
-            log.error("Find all categories failed: " + e.getMessage());
+            log.error("Create category failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
 
-
-    @GetMapping("/categories")
-    public ResponseEntity<ResponseDto<Object>> findAllCategories() {
-        log.info("request finding all categories");
-        try {
-            List<CategoryRetrieveDto> categoryRetrieveDtos = (List<CategoryRetrieveDto>)
-                    categoryService.findAllCategories();
-
-            // add result inside response
-            List<CategoryResponse> categoryResponses = new ArrayList<>();
-            CategoryResponse categoryResponse =  CategoryResponse.builder()
-                    .categoryRetrieveDtos(categoryRetrieveDtos)
-                    .build();
-
-            categoryResponses.add(categoryResponse);
-
-            return ResponseEntity.ok(ResponseDto.build().withData(categoryResponses));
-        } catch (AuthenticationException e) {
-            log.error("Find all categories failed: " + e.getMessage());
-            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
-        }
-    }
 }

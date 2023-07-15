@@ -32,13 +32,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests((requests) -> requests // allow for public api: login api, homepage api, blog api, register api
                         // for all request url inside this app
                         // for permitAll() any user, guest or customer can access this url
-                        .requestMatchers("/","/products").permitAll()
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/api/v1/auth/register").permitAll()
                         .requestMatchers("/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/categories/cities").permitAll()
-                        .requestMatchers("/api/v1/categories/districts").permitAll()
-                        .requestMatchers("/api/v1/categories").permitAll()
                 )
                 .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_USER and ROLE_ADMIN
                         // for all request in this url has role admin & user will be access
