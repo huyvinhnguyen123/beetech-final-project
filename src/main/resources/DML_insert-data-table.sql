@@ -6,8 +6,9 @@ INSERT INTO user(user_id, username, birth_day, login_id, password, role, delete_
 -- OrderProduct's Data
 INSERT INTO order_product(order_id, display_id, order_date, status, user_id) VALUES
 (1, 1, "2023-07-11", "Receiving order", "6978a38b-401c-4e50-8380-2180d8e767a6"),
-(2, 1, "2023-07-11", "Receiving order", "6978a38b-401c-4e50-8380-2180d8e767a6"),
+(2, 1, "2023-07-11", "Receiving order", "6978a38b-401c-4e50-8380-2180d8e767a6")
 -- OrderDetail's Data
+
 
 -- City's Data
 INSERT INTO city(city_id, city_name) VALUES

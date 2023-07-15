@@ -1,6 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,12 +24,12 @@ public class ProductImage {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
+    @JsonBackReference
     private Product product;
 
     @ManyToOne
     @JoinColumn(name = "image_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
+    @JsonBackReference
     private ImageForProduct imageForProduct;
 }

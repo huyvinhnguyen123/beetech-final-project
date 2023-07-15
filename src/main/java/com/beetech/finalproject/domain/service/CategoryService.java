@@ -6,6 +6,7 @@ import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
+import com.beetech.finalproject.exception.DuplicateException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
 import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
@@ -101,6 +102,15 @@ public class CategoryService {
         ImageForCategory imageForCategory = new ImageForCategory();
         imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
         imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
+
+        List<ImageForCategory> imageForCategories = imageForCategoryRepository.findAll();
+        for(ImageForCategory ifc: imageForCategories) {
+            if(ifc.getPath().equals(imageForCategory.getPath())) {
+                log.error("Image path is already existed in folder");
+                throw new DuplicateException("Image path is already existed in folder, Try change image's name");
+            }
+        }
+
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");
 
@@ -189,7 +199,7 @@ public class CategoryService {
             categoryImageRepository.save(categoryImage);
             log.info("Save new category and image success!");
         }
-        log.info("Create category success!");
+        log.info("Update category success!");
         return existingCategory;
     }
 }
