@@ -3,9 +3,11 @@ package com.beetech.finalproject.domain.service;
 import com.beetech.finalproject.domain.entities.Category;
 import com.beetech.finalproject.domain.entities.CategoryImage;
 import com.beetech.finalproject.domain.entities.ImageForCategory;
+import com.beetech.finalproject.domain.entities.Product;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
+import com.beetech.finalproject.domain.repository.ProductRepository;
 import com.beetech.finalproject.exception.DuplicateException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
@@ -33,6 +35,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
+    private final ProductRepository productRepository;
 
     /**
      * upload image for category
@@ -80,9 +83,9 @@ public class CategoryService {
             Files.delete(filePath);
             log.info("delete image in folder success!");
         } catch (IOException e) {
+            log.error("fail to delete file");
             // Handle the exception or log the error message
             e.printStackTrace();
-            log.error("fail to delete file");
         }
     }
 
@@ -166,6 +169,7 @@ public class CategoryService {
      * @param categoryUpdateDto - input categoryUpdateDto
      * @return - update category
      */
+    @Transactional
     public Category updateCategory(Long categoryId, CategoryUpdateDto categoryUpdateDto) {
         Category existingCategory = categoryRepository.findById(categoryId).orElseThrow(
                 () -> {
@@ -201,5 +205,38 @@ public class CategoryService {
         }
         log.info("Update category success!");
         return existingCategory;
+    }
+
+    /**
+     * delete category
+     *
+     * @param categoryId - input categoryId
+     */
+    @Transactional
+    public void deleteCategory(Long categoryId) {
+        Category existingCategory = categoryRepository.findById(categoryId).orElseThrow(
+                () -> {
+                    log.error("Not found this category");
+                    return new NullPointerException("Not found this category: " + categoryId);
+                }
+        );
+        log.info("Found this category");
+
+        for(Product p: existingCategory.getProducts()) {
+            if(p.getProductId() != null ) {
+                log.error("The category is still relation with product");
+                throw new RuntimeException("The category still relation with product");
+            }
+        }
+
+        for(CategoryImage ci: existingCategory.getCategoryImages()) {
+            deleteFile(ci.getImageForCategory().getPath());
+            categoryImageRepository.deleteById(ci.getCategoryImageId());
+            log.info("delete category image success!");
+            imageForCategoryRepository.deleteById(ci.getImageForCategory().getImageId());
+            log.info("delete image for category success!");
+            categoryRepository.deleteById(categoryId);
+            log.info("delete category success");
+        }
     }
 }

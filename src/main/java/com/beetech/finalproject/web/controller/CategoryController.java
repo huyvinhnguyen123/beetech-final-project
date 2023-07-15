@@ -135,4 +135,17 @@ public class CategoryController {
         }
     }
 
+    @DeleteMapping("/delete-category")
+    public ResponseEntity<ResponseDto<Object>> deleteCategory(@RequestParam Long categoryId) {
+        log.info("request deleting category");
+
+        try {
+            categoryService.deleteCategory(categoryId);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Delete category failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
 }
