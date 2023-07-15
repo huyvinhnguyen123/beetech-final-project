@@ -93,4 +93,46 @@ public class CategoryController {
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
+
+
+    @GetMapping("/categories")
+    public ResponseEntity<ResponseDto<Object>> findAllCategories() {
+        log.info("request finding all categories");
+        try {
+            List<CategoryRetrieveDto> categoryRetrieveDtos = (List<CategoryRetrieveDto>)
+                    categoryService.findAllCategories();
+
+            // add result inside response
+            List<CategoryResponse> categoryResponses = new ArrayList<>();
+            CategoryResponse categoryResponse =  CategoryResponse.builder()
+                    .categoryRetrieveDtos(categoryRetrieveDtos)
+                    .build();
+
+            categoryResponses.add(categoryResponse);
+
+            return ResponseEntity.ok(ResponseDto.build().withData(categoryResponses));
+        } catch (AuthenticationException e) {
+            log.error("Find all categories failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @PutMapping(value = "/delete-category",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseDto<Object>> updateCategory(@RequestBody @ModelAttribute
+                                                              CategoryUpdateDto categoryUpdateDto,
+                                                              @RequestParam Long categoryId) {
+        log.info("request updating category");
+
+        try {
+            categoryService.updateCategory(categoryId, categoryUpdateDto);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Update category failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
 }

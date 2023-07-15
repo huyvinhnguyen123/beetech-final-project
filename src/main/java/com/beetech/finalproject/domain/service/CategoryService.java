@@ -127,7 +127,7 @@ public class CategoryService {
     /**
      * find all categories
      *
-     * @return
+     * @return - list categories
      */
     public Iterable<CategoryRetrieveDto> findAllCategories() {
         List<CategoryRetrieveDto> categoryRetrieveDtos = new ArrayList<>();
@@ -164,7 +164,7 @@ public class CategoryService {
      *
      * @param categoryId - input categoryId
      * @param categoryUpdateDto - input categoryUpdateDto
-     * @return
+     * @return - update category
      */
     public Category updateCategory(Long categoryId, CategoryUpdateDto categoryUpdateDto) {
         Category existingCategory = categoryRepository.findById(categoryId).orElseThrow(
