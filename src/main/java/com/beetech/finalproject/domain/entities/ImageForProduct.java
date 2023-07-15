@@ -26,6 +26,9 @@ public class ImageForProduct {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "thumbnail_flag", nullable = false, columnDefinition = "TINYINT")
+    private int thumbnailFlag;
+
     @OneToMany(mappedBy = "imageForProduct")
     private List<ProductImage> productImages;
 }

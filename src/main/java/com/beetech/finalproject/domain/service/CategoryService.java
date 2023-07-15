@@ -6,6 +6,7 @@ import com.beetech.finalproject.domain.entities.ImageForCategory;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
+import com.beetech.finalproject.exception.DuplicateException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
 import com.beetech.finalproject.web.dtos.category.CategoryRetrieveDto;
@@ -101,6 +102,15 @@ public class CategoryService {
         ImageForCategory imageForCategory = new ImageForCategory();
         imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
         imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
+
+        List<ImageForCategory> imageForCategories = imageForCategoryRepository.findAll();
+        for(ImageForCategory ifc: imageForCategories) {
+            if(ifc.getPath().equals(imageForCategory.getPath())) {
+                log.error("Image path is already existed in folder");
+                throw new DuplicateException("Image path is already existed in folder, Try change image's name");
+            }
+        }
+
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");
 
@@ -112,84 +122,5 @@ public class CategoryService {
 
         log.info("Create category success!");
         return category;
-    }
-
-    /**
-     * find all categories
-     *
-     * @return
-     */
-    public Iterable<CategoryRetrieveDto> findAllCategories() {
-        List<CategoryRetrieveDto> categoryRetrieveDtos = new ArrayList<>();
-
-        List<Category> categories = categoryRepository.findAllCategories();
-        for (Category c : categories) {
-            CategoryRetrieveDto categoryRetrieveDto = new CategoryRetrieveDto();
-            categoryRetrieveDto.setCategoryId(c.getCategoryId());
-            categoryRetrieveDto.setCategoryName(c.getCategoryName());
-
-            List<ImageForCategory> imageForCategories = new ArrayList<>();
-            for (CategoryImage ci : c.getCategoryImages()) {
-                imageForCategories.add(ci.getImageForCategory());
-            }
-
-            List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
-            for(ImageForCategory ifc: imageForCategories) {
-                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
-                imageRetrieveDto.setName(ifc.getName());
-                imageRetrieveDto.setPath(ifc.getPath());
-                imageRetrieveDtos.add(imageRetrieveDto);
-            }
-
-            categoryRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
-            categoryRetrieveDtos.add(categoryRetrieveDto);
-        }
-
-        log.info("find all categories success!");
-        return categoryRetrieveDtos;
-    }
-
-    /**
-     * update category
-     *
-     * @param categoryId - input categoryId
-     * @param categoryUpdateDto - input categoryUpdateDto
-     * @return
-     */
-    public Category updateCategory(Long categoryId, CategoryUpdateDto categoryUpdateDto) {
-        Category existingCategory = categoryRepository.findById(categoryId).orElseThrow(
-                () -> {
-                    log.error("Not found this category");
-                    return new NullPointerException("Not found this category: " + categoryId);
-                }
-        );
-        log.info("Found this category");
-
-        existingCategory.setCategoryName(categoryUpdateDto.getCategoryName());
-        categoryRepository.save(existingCategory);
-
-        if(categoryUpdateDto.getImage() != null || !categoryUpdateDto.getImage().isEmpty() ) {
-            for(CategoryImage ci: existingCategory.getCategoryImages()) {
-                deleteFile(ci.getImageForCategory().getPath());
-                categoryImageRepository.deleteById(ci.getCategoryImageId());
-                log.info("delete category image success!");
-                imageForCategoryRepository.deleteById(ci.getImageForCategory().getImageId());
-                log.info("delete image for category success!");
-            }
-
-            ImageForCategory imageForCategory = new ImageForCategory();
-            imageForCategory.setPath(uploadFile(categoryUpdateDto.getImage()));
-            imageForCategory.setName(categoryUpdateDto.getImage().getOriginalFilename());
-            imageForCategoryRepository.save(imageForCategory);
-            log.info("Save new image for category success!");
-
-            CategoryImage categoryImage = new CategoryImage();
-            categoryImage.setCategory(existingCategory);
-            categoryImage.setImageForCategory(imageForCategory);
-            categoryImageRepository.save(categoryImage);
-            log.info("Save new category and image success!");
-        }
-        log.info("Create category success!");
-        return existingCategory;
     }
 }
