@@ -35,6 +35,70 @@ public class ProductService {
     private final ImageForProductRepository imageForProductRepository;
     private final ProductImageRepository productImageRepository;
 
+    /**
+     * upload image for product
+     *
+     * @param file - input image(only accept .jpg)
+     * @return url
+     */
+    public String uploadFile(MultipartFile file) {
+        try {
+            String fileName = file.getOriginalFilename();
+
+            // Get the value of the file.upload.directory property
+            String uploadDirectory = "src/main/resources/upload/product";
+
+            // Create the upload directory if it doesn't exist
+            Path uploadDirectoryPath = Paths.get(uploadDirectory);
+            if (!Files.exists(uploadDirectoryPath)) {
+                Files.createDirectories(uploadDirectoryPath);
+            }
+
+            Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
+
+            String destinationPath = uploadDirectory + File.separator + fileName;
+            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
+            return fileUrl;
+        } catch (IOException e) {
+            return "Failed to upload file: " + e.getMessage();
+        }
+    }
+
+    public Product createProduct(ProductCreateDto productCreateDto) {
+        Product product = new Product();
+        product.setSku(productCreateDto.getSku());
+        product.setProductName(productCreateDto.getProductName());
+        product.setDetailInfo(productCreateDto.getDetailInfo());
+        product.setPrice(productCreateDto.getPrice());
+
+        List<Category> categoryForProductList = new ArrayList<>();
+        List<Category> categories = categoryRepository.findAll();
+        for(Category c: categories) {
+            if(c.getCategoryId().equals(productCreateDto.getCategoryId())) {
+                categoryForProductList.add(c);
+            }
+        }
+
+        product.setCategories(categoryForProductList);
+        product.setDeleteFlag(DeleteFlag.NON_DELETE.getCode());
+        productRepository.save(product);
+        log.info("Save product success!");
+
+        ImageForProduct imageForProduct = new ImageForProduct();
+        imageForProduct.setPath(uploadFile(productCreateDto.getThumbnailImage()));
+        imageForProduct.setName(productCreateDto.getThumbnailImage().getOriginalFilename());
+        imageForProductRepository.save(imageForProduct);
+        log.info("Save image for product success");
+
+        ProductImage productImage = new ProductImage();
+        productImage.setProduct(product);
+        productImage.setImageForProduct(imageForProduct);
+        productImageRepository.save(productImage);
+        log.info("Save product image success");
+
+        log.info("create product success");
+        return product;
+    }
 
     public Page<ProductRetrieveDto> findAllProductsAndPagination(ProductSearchInputDto productSearchInputDto,
                                                                  Pageable pageable) {

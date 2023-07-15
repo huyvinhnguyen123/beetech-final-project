@@ -29,6 +29,23 @@ import java.util.List;
 public class ProductController {
     private final ProductService productService;
 
+    @PostMapping(value = "/create-product",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseDto<Object>> createProduct(@RequestBody @ModelAttribute
+                                                              ProductCreateDto productCreateDto) {
+        log.info("request creating product");
+
+        try {
+            productService.createProduct(productCreateDto);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Create product failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
     @GetMapping("/products")
     public ResponseEntity<ResponseDto<Object>> findAllProductsAndPagination(@RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int size,
