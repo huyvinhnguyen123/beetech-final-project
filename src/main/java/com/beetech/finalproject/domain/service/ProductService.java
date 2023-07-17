@@ -59,7 +59,8 @@ public class ProductService {
             String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {
-            return "Failed to upload file: " + e.getMessage();
+            log.error("Failed to upload file: " + e.getMessage());
+            return "Failed to upload file";
         }
     }
 

@@ -1,13 +1,14 @@
 package com.beetech.finalproject.web.controller;
 
 import com.beetech.finalproject.common.AuthException;
-import com.beetech.finalproject.domain.entities.Cart;
 import com.beetech.finalproject.domain.service.CartService;
 import com.beetech.finalproject.web.common.ResponseDto;
 import com.beetech.finalproject.web.dtos.cart.CartCreateDto;
 import com.beetech.finalproject.web.dtos.cart.CartRetrieveCreateDto;
-import com.beetech.finalproject.web.dtos.product.ProductCreateDto;
-import com.beetech.finalproject.web.response.CartResponse;
+import com.beetech.finalproject.web.dtos.cart.CartRetrieveSyncDto;
+import com.beetech.finalproject.web.dtos.cart.CartSyncDto;
+import com.beetech.finalproject.web.response.CartResponseCreate;
+import com.beetech.finalproject.web.response.CartResponseSync;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,13 +28,30 @@ public class CartController {
 
         try {
             CartRetrieveCreateDto cartRetrieveCreateDto = cartService.addProductToCart(cartCreateDto);
-            CartResponse cartResponse = CartResponse.builder()
+            CartResponseCreate cartResponse = CartResponseCreate.builder()
                     .cartRetrieveCreateDto(cartRetrieveCreateDto)
                     .build();
 
             return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
         } catch (AuthenticationException e) {
-            log.error("Create product failed: " + e.getMessage());
+            log.error("Add product failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @GetMapping("/sync-cart")
+    public ResponseEntity<ResponseDto<Object>> syncCartAfterLogin(@RequestBody CartSyncDto cartSyncDto) {
+        log.info("request syncing cart");
+
+        try {
+            CartRetrieveSyncDto cartRetrieveSyncDto = cartService.syncCartAfterLogin(cartSyncDto);
+            CartResponseSync cartResponse = CartResponseSync.builder()
+                    .cartRetrieveSyncDto(cartRetrieveSyncDto)
+                    .build();
+
+            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
+        } catch (AuthenticationException e) {
+            log.error("Sync cart failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }

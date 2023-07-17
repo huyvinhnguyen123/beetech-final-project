@@ -7,7 +7,6 @@ import com.beetech.finalproject.domain.entities.Product;
 import com.beetech.finalproject.domain.repository.CategoryImageRepository;
 import com.beetech.finalproject.domain.repository.CategoryRepository;
 import com.beetech.finalproject.domain.repository.ImageForCategoryRepository;
-import com.beetech.finalproject.domain.repository.ProductRepository;
 import com.beetech.finalproject.exception.DuplicateException;
 import com.beetech.finalproject.exception.ValidFileExtensionException;
 import com.beetech.finalproject.web.dtos.category.CategoryCreateDto;
@@ -35,7 +34,6 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
-    private final ProductRepository productRepository;
 
     /**
      * upload image for category
@@ -68,7 +66,8 @@ public class CategoryService {
             String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
             return fileUrl;
         } catch (IOException e) {
-            return "Failed to upload file: " + e.getMessage();
+            log.error("Failed to upload file: " + e.getMessage());
+            return "Failed to upload file";
         }
     }
 
