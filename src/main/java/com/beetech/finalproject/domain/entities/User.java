@@ -2,6 +2,7 @@ package com.beetech.finalproject.domain.entities;
 
 import com.beetech.finalproject.common.DeleteFlag;
 import com.beetech.finalproject.common.LockFlag;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,10 +50,12 @@ public class User implements UserDetails {
 
     private String role;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Cart> carts;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
+    private Cart cart;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
     private List<Order> orders;
 
     @Override
