@@ -1,5 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,11 @@ public class ImageForProduct {
     private int thumbnailFlag;
 
     @OneToMany(mappedBy = "imageForProduct")
+    @JsonIgnoreProperties
     private List<ProductImage> productImages;
+
+    @OneToMany(mappedBy = "imageForProduct")
+    @JsonIgnoreProperties
+    private List<DetailImage> detailImages;
 }
 

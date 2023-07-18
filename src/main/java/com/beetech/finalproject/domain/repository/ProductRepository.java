@@ -9,6 +9,8 @@ import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProductRepository extends CrudRepository<Product, Long>, ListCrudRepository<Product, Long> {
     @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
@@ -22,7 +24,24 @@ public interface ProductRepository extends CrudRepository<Product, Long>, ListCr
             "(p.sku LIKE %:sku% OR p.product_name LIKE %:productName%)\n" +
             "GROUP BY p.product_id",
             nativeQuery = true)
-    Page<Product> findAllProductsAndPagination(@Param("categoryId") Long categoryId, @Param("sku") String sku,
+    Page<Product> searchProductsAndPagination(@Param("categoryId") Long categoryId, @Param("sku") String sku,
                                                @Param("productName") String productName,
                                                Pageable pageable);
+    @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
+            "ifp.name, ifp.path\n" +
+            "FROM product p\n" +
+            "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
+            "LEFT JOIN image_for_product ifp ON ifp.image_id = proimg.image_id\n" +
+            "WHERE p.sku LIKE %:sku% OR p.product_name LIKE %:productName%",
+            nativeQuery = true)
+    List<Product> searchProducts(@Param("sku") String sku, @Param("productName") String productName);
+
+    @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
+            "ifp.name, ifp.path\n" +
+            "FROM product p\n" +
+            "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
+            "LEFT JOIN image_for_product ifp ON ifp.image_id = proimg.image_id\n" +
+            "WHERE p.sku LIKE %:sku%",
+            nativeQuery = true)
+    List<Product> searchProducts(@Param("sku") String sku);
 }

@@ -1,14 +1,8 @@
 package com.beetech.finalproject.domain.service;
 
 import com.beetech.finalproject.common.DeleteFlag;
-import com.beetech.finalproject.domain.entities.Category;
-import com.beetech.finalproject.domain.entities.ImageForProduct;
-import com.beetech.finalproject.domain.entities.Product;
-import com.beetech.finalproject.domain.entities.ProductImage;
-import com.beetech.finalproject.domain.repository.CategoryRepository;
-import com.beetech.finalproject.domain.repository.ImageForProductRepository;
-import com.beetech.finalproject.domain.repository.ProductImageRepository;
-import com.beetech.finalproject.domain.repository.ProductRepository;
+import com.beetech.finalproject.domain.entities.*;
+import com.beetech.finalproject.domain.repository.*;
 import com.beetech.finalproject.web.dtos.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +26,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ImageForProductRepository imageForProductRepository;
     private final ProductImageRepository productImageRepository;
+    private final DetailImageRepository detailImageRepository;
 
     /**
      * upload image for product
@@ -53,10 +47,10 @@ public class ProductService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
+            // upload file to folder(require this code)
             Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
-            String destinationPath = uploadDirectory + File.separator + fileName;
-            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
+            String fileUrl = "src/main/resources/upload/product/" + fileName;
             return fileUrl;
         } catch (IOException e) {
             log.error("Failed to upload file: " + e.getMessage());
@@ -64,6 +58,32 @@ public class ProductService {
         }
     }
 
+    /**
+     * delete image that's exist in folder
+     *
+     * @param fileUrl - input file url from upload file
+     */
+    public void deleteFile(String fileUrl) {
+        try {
+            Path filePath = Paths.get(fileUrl).toAbsolutePath().normalize();
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Deleted file: {}", fileUrl);
+            } else {
+                log.warn("File not found: {}", fileUrl);
+            }
+        } catch (IOException e) {
+            log.error("Failed to delete file: {}", fileUrl);
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * create product
+     *
+     * @param productCreateDto - input productCreateDto's properties
+     * @return - product
+     */
     public Product createProduct(ProductCreateDto productCreateDto) {
         Product product = new Product();
         product.setSku(productCreateDto.getSku());
@@ -96,14 +116,31 @@ public class ProductService {
         productImageRepository.save(productImage);
         log.info("Save product image success");
 
+        List<MultipartFile> multipartImages = productCreateDto.getDetailImages();
+        for(int i = 0; i < multipartImages.size(); i++) {
+            DetailImage detailImage = new DetailImage();
+            detailImage.setPath(uploadFile(productCreateDto.getDetailImages().get(i)));
+            detailImage.setName(productCreateDto.getDetailImages().get(i).getOriginalFilename());
+            detailImage.setImageForProduct(imageForProduct);
+            detailImageRepository.save(detailImage);
+            log.info("Save detail image success");
+        }
+
         log.info("create product success");
         return product;
     }
 
-    public Page<ProductRetrieveDto> findAllProductsAndPagination(ProductSearchInputDto productSearchInputDto,
+    /**
+     * search products & pagination
+     *
+     * @param productSearchInputDto - input productSearchInputDto's properties
+     * @param pageable - input pageable
+     * @return - list products with pagination
+     */
+    public Page<ProductRetrieveDto> searchProductsAndPagination(ProductSearchInputDto productSearchInputDto,
                                                                  Pageable pageable) {
 
-        Page<Product> products = productRepository.findAllProductsAndPagination(productSearchInputDto.getCategoryId(),
+        Page<Product> products = productRepository.searchProductsAndPagination(productSearchInputDto.getCategoryId(),
                 productSearchInputDto.getSku(), productSearchInputDto.getProductName(),
                 pageable);
 
@@ -130,8 +167,46 @@ public class ProductService {
 
             productRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
 
-            log.info("Find all product by category success");
+            log.info("Search products success");
             return productRetrieveDto;
         });
+    }
+
+    /**
+     * search products with detail information
+     *
+     * @param sku - input sku
+     * @return - list products
+     */
+    public List<ProductRetrieveSearchDetailDto> searchProducts(String sku) {
+        List<Product> products = productRepository.searchProducts(sku);
+
+        List<ProductRetrieveSearchDetailDto> productRetrieveSearchDetailDtos = new ArrayList<>();
+        for(Product p: products) {
+            ProductRetrieveSearchDetailDto productRetrieveSearchDetailDto = new ProductRetrieveSearchDetailDto();
+            productRetrieveSearchDetailDto.setProductId(p.getProductId());
+            productRetrieveSearchDetailDto.setSku(p.getSku());
+            productRetrieveSearchDetailDto.setProductName(p.getProductName());
+            productRetrieveSearchDetailDto.setDetailInfo(p.getDetailInfo());
+            productRetrieveSearchDetailDto.setPrice(p.getPrice());
+
+            List<ImageForProduct> imageForProducts = new ArrayList<>();
+            for(ProductImage pi: p.getProductImages()) {
+                imageForProducts.add(pi.getImageForProduct());
+            }
+
+            List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
+            for(ImageForProduct ifp: imageForProducts) {
+                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
+                imageRetrieveDto.setPath(ifp.getPath());
+                imageRetrieveDto.setName(ifp.getName());
+                imageRetrieveDtos.add(imageRetrieveDto);
+            }
+
+            productRetrieveSearchDetailDto.setImageRetrieveDtos(imageRetrieveDtos);
+
+        }
+        log.info("Search products success");
+        return productRetrieveSearchDetailDtos;
     }
 }

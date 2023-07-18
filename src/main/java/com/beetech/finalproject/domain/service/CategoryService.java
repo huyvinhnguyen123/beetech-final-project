@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,10 +59,10 @@ public class CategoryService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
+            // upload file to folder(require this code)
             Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
 
-            String destinationPath = uploadDirectory + File.separator + fileName;
-            String fileUrl = destinationPath.substring(destinationPath.lastIndexOf(File.separator) + 1);
+            String fileUrl = "src/main/resources/upload/category/" + fileName;
             return fileUrl;
         } catch (IOException e) {
             log.error("Failed to upload file: " + e.getMessage());
@@ -78,16 +77,18 @@ public class CategoryService {
      */
     public void deleteFile(String fileUrl) {
         try {
-            Path filePath = Paths.get(fileUrl);
-            Files.delete(filePath);
-            log.info("delete image in folder success!");
+            Path filePath = Paths.get(fileUrl).toAbsolutePath().normalize();
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                log.info("Deleted file: {}", fileUrl);
+            } else {
+                log.warn("File not found: {}", fileUrl);
+            }
         } catch (IOException e) {
-            log.error("fail to delete file");
-            // Handle the exception or log the error message
+            log.error("Failed to delete file: {}", fileUrl);
             e.printStackTrace();
         }
     }
-
     /**
      * create new category
      *
