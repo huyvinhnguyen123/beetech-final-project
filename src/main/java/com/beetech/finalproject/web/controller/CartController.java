@@ -3,10 +3,7 @@ package com.beetech.finalproject.web.controller;
 import com.beetech.finalproject.common.AuthException;
 import com.beetech.finalproject.domain.service.CartService;
 import com.beetech.finalproject.web.common.ResponseDto;
-import com.beetech.finalproject.web.dtos.cart.CartCreateDto;
-import com.beetech.finalproject.web.dtos.cart.CartRetrieveCreateDto;
-import com.beetech.finalproject.web.dtos.cart.CartRetrieveSyncDto;
-import com.beetech.finalproject.web.dtos.cart.CartSyncDto;
+import com.beetech.finalproject.web.dtos.cart.*;
 import com.beetech.finalproject.web.response.CartResponseCreate;
 import com.beetech.finalproject.web.response.CartResponseSync;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +49,23 @@ public class CartController {
             return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
         } catch (AuthenticationException e) {
             log.error("Sync cart failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @PostMapping("/delete-cart")
+    public ResponseEntity<ResponseDto<Object>> deleteCart(@RequestBody CartDeleteDto cartDeleteDto) {
+        log.info("request deleting cart");
+
+        try {
+            CartRetrieveSyncDto cartRetrieveSyncDto = cartService.deleteCart(cartDeleteDto);
+            CartResponseSync cartResponse = CartResponseSync.builder()
+                    .cartRetrieveSyncDto(cartRetrieveSyncDto)
+                    .build();
+
+            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
+        } catch (AuthenticationException e) {
+            log.error("Delete cart failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
