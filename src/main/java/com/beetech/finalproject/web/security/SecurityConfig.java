@@ -41,13 +41,15 @@ public class SecurityConfig {
                         // for all request in this url has role admin & user will be access
                         .requestMatchers("/api/v1/users/**").hasAnyRole("USER", "ADMIN") // prepare for prefix ROLE_
                 )
-                .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_ADMIN
+                .authorizeHttpRequests((requests) -> requests // allow for login authentication & for specific ROLE_
                         // for all request in this url has role admin will be access
                         // prepare for prefix ROLE_
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/add-category").hasRole("ADMIN")
                         .requestMatchers("/api/v1/delete-category").hasRole("ADMIN")
                         .requestMatchers("/api/v1/create-product").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/delete-product").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/create-order").hasRole("USER")
                 )
                 // For all others url need to be authenticated
                 .authorizeHttpRequests((requests) -> requests.anyRequest().authenticated())

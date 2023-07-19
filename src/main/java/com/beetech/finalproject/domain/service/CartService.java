@@ -13,7 +13,6 @@ import com.beetech.finalproject.web.dtos.cart.*;
 import com.beetech.finalproject.web.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,13 +50,13 @@ public class CartService {
      */
     @Transactional
     public CartRetrieveCreateDto addProductToCart(CartCreateDto cartCreateDto) {
+        String cartToken = "";
+
         User existingUser = extractUserFromToken(cartCreateDto.getToken());
         if(existingUser == null) {
             log.error("Not found this user");
-            throw new UsernameNotFoundException("User not found: " + existingUser);
+            cartToken = CustomGenerate.generateRandomString(20);
         }
-
-        String cartToken = CustomGenerate.generateRandomString(20);
 
         Cart cart = existingUser.getCart();
         if(cart == null) {
@@ -108,6 +107,7 @@ public class CartService {
      * @param cartSyncDto - input cartSyncSto
      * @return - cartRetrieveDto
      */
+    @Transactional
     public CartRetrieveSyncDto syncCartAfterLogin(CartSyncDto cartSyncDto) {
         CartRetrieveSyncDto cartRetrieveSyncDto = new CartRetrieveSyncDto();
 

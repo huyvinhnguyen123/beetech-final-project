@@ -33,6 +33,9 @@ public class Cart {
     @Column(name = "token")
     private String token;
 
+    @Column(name = "user_note")
+    private String userNote;
+
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

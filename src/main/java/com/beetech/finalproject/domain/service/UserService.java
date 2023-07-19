@@ -44,10 +44,16 @@ public class UserService {
         user.setPassword(PasswordEncrypt.bcryptPassword(userCreateDto.getPassword()));
         user.setLogFlag(LockFlag.NON_LOCK.getCode());
         user.setDeleteFlag(DeleteFlag.NON_DELETE.getCode());
-        user.setRole(Roles.USER.getRole());
+        if(user.getLoginId().equals("huy.vinhnguyen@outlook.com")) {
+            user.setRole(Roles.ADMIN.getRole());
+        } else {
+            user.setRole(Roles.USER.getRole());
+        }
 
         userRepository.save(user);
         log.info("create user success");
+
+        log.info("Role: " + user.getRole());
 
         return user;
     }

@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -38,6 +39,8 @@ public class ProductService {
         try {
             String fileName = file.getOriginalFilename();
 
+            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+
             // Get the value of the file.upload.directory property
             String uploadDirectory = "src/main/resources/upload/product";
 
@@ -48,7 +51,20 @@ public class ProductService {
             }
 
             // upload file to folder(require this code)
-            Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
+            // Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
+
+            // Check if the file with the same name already exists
+            Path filePath = uploadDirectoryPath.resolve(fileName);
+            int count = 1;
+            while (Files.exists(filePath)) {
+                // If the file exists, append (count) before the extension and try again
+                fileName = fileName.substring(0, fileName.lastIndexOf(".")) + "(" + count + ")." + fileExtension;
+                filePath = uploadDirectoryPath.resolve(fileName);
+                count++;
+            }
+
+            // upload file to folder
+            Files.copy(file.getInputStream(), filePath);
 
             String fileUrl = "src/main/resources/upload/product/" + fileName;
             return fileUrl;
@@ -105,6 +121,7 @@ public class ProductService {
         log.info("Save product success!");
 
         ImageForProduct imageForProduct = new ImageForProduct();
+
         imageForProduct.setPath(uploadFile(productCreateDto.getThumbnailImage()));
         imageForProduct.setName(productCreateDto.getThumbnailImage().getOriginalFilename());
         imageForProductRepository.save(imageForProduct);
@@ -152,24 +169,44 @@ public class ProductService {
             productRetrieveDto.setDetailInfo(product.getDetailInfo());
             productRetrieveDto.setPrice(product.getPrice());
 
-            List<ImageForProduct> imageForProducts = new ArrayList<>();
             for(ProductImage productImage: product.getProductImages()) {
-                imageForProducts.add(productImage.getImageForProduct());
+                productRetrieveDto.setName(productImage.getImageForProduct().getName());
+                productRetrieveDto.setPath(productImage.getImageForProduct().getPath());
             }
-
-            List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
-            for(ImageForProduct ifp: imageForProducts) {
-                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
-                imageRetrieveDto.setName(ifp.getName());
-                imageRetrieveDto.setPath(ifp.getPath());
-                imageRetrieveDtos.add(imageRetrieveDto);
-            }
-
-            productRetrieveDto.setImageRetrieveDtos(imageRetrieveDtos);
 
             log.info("Search products success");
             return productRetrieveDto;
         });
+    }
+
+    @Transactional
+    public void deleteProduct(Long productId) {
+        Product existingProduct = productRepository.findById(productId).orElseThrow(
+                () -> {
+                    log.info("Not found this product");
+                    return new NullPointerException("Not found this product: " + productId);
+                }
+        );
+        log.info("Found product");
+
+        existingProduct.setOldSku(existingProduct.getSku());
+        existingProduct.setSku(null);
+        existingProduct.setDeleteFlag(1);
+        productRepository.save(existingProduct);
+        log.info("Update product success");
+
+        for(ProductImage productImage: existingProduct.getProductImages()) {
+            deleteFile(productImage.getImageForProduct().getPath());
+            for(DetailImage detailImage: productImage.getImageForProduct().getDetailImages()) {
+                deleteFile(detailImage.getPath());
+                detailImageRepository.deleteById(detailImage.getDetailImageId());
+                log.info("Delete detail image success");
+            }
+            productImageRepository.deleteById(productImage.getProductImageId());
+            log.info("Delete product image success");
+            imageForProductRepository.deleteById(productImage.getImageForProduct().getImageProductId());
+            log.info("Delete image for product success");
+        }
     }
 
     /**

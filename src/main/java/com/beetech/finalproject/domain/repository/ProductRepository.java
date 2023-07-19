@@ -13,7 +13,7 @@ import java.util.List;
 
 @Repository
 public interface ProductRepository extends CrudRepository<Product, Long>, ListCrudRepository<Product, Long> {
-    @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
+    @Query(value="SELECT p.product_id, p.sku, p.old_sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
             "ifp.name, ifp.path, c.category_id, COUNT(p.product_id) AS total_items\n" +
             "FROM product p\n" +
             "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
@@ -27,7 +27,7 @@ public interface ProductRepository extends CrudRepository<Product, Long>, ListCr
     Page<Product> searchProductsAndPagination(@Param("categoryId") Long categoryId, @Param("sku") String sku,
                                                @Param("productName") String productName,
                                                Pageable pageable);
-    @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
+    @Query(value="SELECT p.product_id, p.sku, p.old_sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
             "ifp.name, ifp.path\n" +
             "FROM product p\n" +
             "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
@@ -36,7 +36,7 @@ public interface ProductRepository extends CrudRepository<Product, Long>, ListCr
             nativeQuery = true)
     List<Product> searchProducts(@Param("sku") String sku, @Param("productName") String productName);
 
-    @Query(value="SELECT p.product_id, p.sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
+    @Query(value="SELECT p.product_id, p.sku, p.old_sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
             "ifp.name, ifp.path\n" +
             "FROM product p\n" +
             "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +

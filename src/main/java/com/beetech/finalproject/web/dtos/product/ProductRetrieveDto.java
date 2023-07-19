@@ -12,6 +12,7 @@ public class ProductRetrieveDto {
     private String sku;
     private String detailInfo;
     private Double price;
-    private List<ImageRetrieveDto> imageRetrieveDtos;
+    private String name;
+    private String path;
     private Long totalPage;
 }

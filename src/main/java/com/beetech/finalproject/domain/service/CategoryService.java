@@ -59,8 +59,18 @@ public class CategoryService {
                 Files.createDirectories(uploadDirectoryPath);
             }
 
-            // upload file to folder(require this code)
-            Files.copy(file.getInputStream(), uploadDirectoryPath.resolve(file.getOriginalFilename()));
+            // Check if the file with the same name already exists
+            Path filePath = uploadDirectoryPath.resolve(fileName);
+            int count = 1;
+            while (Files.exists(filePath)) {
+                // If the file exists, append (count) before the extension and try again
+                fileName = fileName.substring(0, fileName.lastIndexOf(".")) + "(" + count + ")." + fileExtension;
+                filePath = uploadDirectoryPath.resolve(fileName);
+                count++;
+            }
+
+            // upload file to folder
+            Files.copy(file.getInputStream(), filePath);
 
             String fileUrl = "src/main/resources/upload/category/" + fileName;
             return fileUrl;
@@ -105,14 +115,6 @@ public class CategoryService {
         ImageForCategory imageForCategory = new ImageForCategory();
         imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
         imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
-
-        List<ImageForCategory> imageForCategories = imageForCategoryRepository.findAll();
-        for(ImageForCategory ifc: imageForCategories) {
-            if(ifc.getPath().equals(imageForCategory.getPath())) {
-                log.error("Image path is already existed in folder");
-                throw new DuplicateException("Image path is already existed in folder, Try change image's name");
-            }
-        }
 
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");

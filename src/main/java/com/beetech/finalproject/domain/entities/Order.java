@@ -26,10 +26,16 @@ public class Order {
     private int displayId; // if 1 is display if 0 it's not
 
     @Column(name = "status", nullable = false)
-    private String status;
+    private int status;
 
     @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;
+
+    @Column(name = "user_note")
+    private String userNote;
+
+    @Column(name = "total price")
+    private double totalPrice;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

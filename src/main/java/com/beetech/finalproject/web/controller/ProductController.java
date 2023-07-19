@@ -92,4 +92,17 @@ public class ProductController {
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }
+
+    @DeleteMapping("/delete-product")
+    public ResponseEntity<ResponseDto<Object>> deleteProduct(@RequestParam Long productId) {
+        log.info("request deleting category");
+
+        try {
+            productService.deleteProduct(productId);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Delete category failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
 }

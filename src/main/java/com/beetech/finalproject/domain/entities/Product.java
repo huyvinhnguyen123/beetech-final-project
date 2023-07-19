@@ -21,7 +21,7 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long productId;
 
-    @Column(name = "sku", nullable = false)
+    @Column(name = "sku")
     private String sku;
 
     @Column(name = "product_name")
@@ -35,6 +35,9 @@ public class Product {
 
     @Column(name = "delete_flag")
     private int deleteFlag = 0;
+
+    @Column(name = "old_sku")
+    private String oldSku;
 
     @OneToMany(mappedBy = "product")
     @JsonIgnoreProperties
