@@ -44,6 +44,23 @@ public class ProductController {
         }
     }
 
+    @PutMapping(value = "/update-product",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ResponseDto<Object>> updateProduct(@RequestParam Long productId, @RequestBody @ModelAttribute
+                                                             ProductCreateDto productCreateDto) {
+        log.info("request updating product");
+
+        try {
+            productService.updateProduct(productId, productCreateDto);
+            return ResponseEntity.ok(ResponseDto.build().withMessage("OK"));
+        } catch (AuthenticationException e) {
+            log.error("Update product failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
     @GetMapping("/products")
     public ResponseEntity<ResponseDto<Object>> searchProductsAndPagination(@RequestParam(defaultValue = "0") int page,
                                                                             @RequestParam(defaultValue = "10") int size,

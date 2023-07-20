@@ -121,7 +121,6 @@ public class ProductService {
         log.info("Save product success!");
 
         ImageForProduct imageForProduct = new ImageForProduct();
-
         imageForProduct.setPath(uploadFile(productCreateDto.getThumbnailImage()));
         imageForProduct.setName(productCreateDto.getThumbnailImage().getOriginalFilename());
         imageForProductRepository.save(imageForProduct);
@@ -143,7 +142,7 @@ public class ProductService {
             log.info("Save detail image success");
         }
 
-        log.info("create product success");
+        log.info("Create product success");
         return product;
     }
 
@@ -179,11 +178,16 @@ public class ProductService {
         });
     }
 
+    /**
+     * delete product
+     *
+     * @param productId - input productId
+     */
     @Transactional
     public void deleteProduct(Long productId) {
         Product existingProduct = productRepository.findById(productId).orElseThrow(
                 () -> {
-                    log.info("Not found this product");
+                    log.error("Not found this product");
                     return new NullPointerException("Not found this product: " + productId);
                 }
         );
@@ -191,7 +195,7 @@ public class ProductService {
 
         existingProduct.setOldSku(existingProduct.getSku());
         existingProduct.setSku(null);
-        existingProduct.setDeleteFlag(1);
+        existingProduct.setDeleteFlag(DeleteFlag.DELETED.getCode());
         productRepository.save(existingProduct);
         log.info("Update product success");
 
@@ -228,22 +232,108 @@ public class ProductService {
             productRetrieveSearchDetailDto.setPrice(p.getPrice());
 
             List<ImageForProduct> imageForProducts = new ArrayList<>();
-            for(ProductImage pi: p.getProductImages()) {
-                imageForProducts.add(pi.getImageForProduct());
+            for(ProductImage productImage: p.getProductImages()) {
+                imageForProducts.add(productImage.getImageForProduct());
             }
 
             List<ImageRetrieveDto> imageRetrieveDtos = new ArrayList<>();
             for(ImageForProduct ifp: imageForProducts) {
-                ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
-                imageRetrieveDto.setPath(ifp.getPath());
-                imageRetrieveDto.setName(ifp.getName());
-                imageRetrieveDtos.add(imageRetrieveDto);
+                productRetrieveSearchDetailDto.setName(ifp.getName());
+                productRetrieveSearchDetailDto.setPath(ifp.getPath());
+
+                for(DetailImage detailImage: ifp.getDetailImages()) {
+                    ImageRetrieveDto imageRetrieveDto = new ImageRetrieveDto();
+                    imageRetrieveDto.setName(detailImage.getName());
+                    imageRetrieveDto.setPath(detailImage.getPath());
+
+                    imageRetrieveDtos.add(imageRetrieveDto);
+                }
             }
-
-            productRetrieveSearchDetailDto.setImageRetrieveDtos(imageRetrieveDtos);
-
+            productRetrieveSearchDetailDto.setDetailImages(imageRetrieveDtos);
+            productRetrieveSearchDetailDtos.add(productRetrieveSearchDetailDto);
         }
         log.info("Search products success");
         return productRetrieveSearchDetailDtos;
+    }
+
+    /**
+     * update product
+     *
+     * @param productId - input productId
+     * @param productCreateDto - input productCreateDto's properties
+     * @return - product after update
+     */
+    @Transactional
+    public Product updateProduct(Long productId, ProductCreateDto productCreateDto) {
+        Product existingProduct = productRepository.findById(productId).orElseThrow(
+                ()->{
+                    log.error("Not found this product");
+                    return new NullPointerException("Not found this product: " + productId);
+                }
+        );
+        log.info("Found product");
+
+        existingProduct.setSku(productCreateDto.getSku());
+        existingProduct.setProductName(productCreateDto.getProductName());
+        existingProduct.setDetailInfo(productCreateDto.getDetailInfo());
+        existingProduct.setPrice(productCreateDto.getPrice());
+
+        List<Category> categoryForProductList = new ArrayList<>();
+        List<Category> categories = categoryRepository.findAll();
+        for(Category c: categories) {
+            if(c.getCategoryId().equals(productCreateDto.getCategoryId())) {
+                categoryForProductList.add(c);
+            }
+        }
+
+        existingProduct.setCategories(categoryForProductList);
+        productRepository.save(existingProduct);
+        log.info("Update product success");
+
+        if(existingProduct.getProductImages() == null || existingProduct.getProductImages().isEmpty()) {
+            ImageForProduct imageForProduct = new ImageForProduct();
+            imageForProduct.setPath(uploadFile(productCreateDto.getThumbnailImage()));
+            imageForProduct.setName(productCreateDto.getThumbnailImage().getOriginalFilename());
+            imageForProductRepository.save(imageForProduct);
+            log.info("Save image for product success");
+
+            ProductImage productImage = new ProductImage();
+            productImage.setProduct(existingProduct);
+            productImage.setImageForProduct(imageForProduct);
+            productImageRepository.save(productImage);
+            log.info("Save product image success");
+
+            List<MultipartFile> multipartImages = productCreateDto.getDetailImages();
+            for(int i = 0; i < multipartImages.size(); i++) {
+                DetailImage detailImage = new DetailImage();
+                detailImage.setPath(uploadFile(productCreateDto.getDetailImages().get(i)));
+                detailImage.setName(productCreateDto.getDetailImages().get(i).getOriginalFilename());
+                detailImage.setImageForProduct(imageForProduct);
+                detailImageRepository.save(detailImage);
+                log.info("Save detail image success");
+            }
+        } else {
+            for(ProductImage productImage: existingProduct.getProductImages()) {
+                ImageForProduct imageForProduct = productImage.getImageForProduct();
+                imageForProduct.setPath(uploadFile(productCreateDto.getThumbnailImage()));
+                imageForProduct.setName(productCreateDto.getThumbnailImage().getOriginalFilename());
+                imageForProductRepository.save(imageForProduct);
+                log.info("update image for product success");
+
+                for(DetailImage di: imageForProduct.getDetailImages()) {
+                    List<MultipartFile> multipartImages = productCreateDto.getDetailImages();
+                    for(int i = 0; i < multipartImages.size(); i++) {
+                        DetailImage detailImage = di;
+                        detailImage.setPath(uploadFile(productCreateDto.getDetailImages().get(i)));
+                        detailImage.setName(productCreateDto.getDetailImages().get(i).getOriginalFilename());
+                        detailImage.setImageForProduct(imageForProduct);
+                        detailImageRepository.save(detailImage);
+                        log.info("Save detail image success");
+                    }
+                }
+            }
+        }
+        log.info("Update product success");
+        return existingProduct;
     }
 }

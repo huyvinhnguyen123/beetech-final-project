@@ -44,6 +44,7 @@ public class UserService {
         user.setPassword(PasswordEncrypt.bcryptPassword(userCreateDto.getPassword()));
         user.setLogFlag(LockFlag.NON_LOCK.getCode());
         user.setDeleteFlag(DeleteFlag.NON_DELETE.getCode());
+
         if(user.getLoginId().equals("huy.vinhnguyen@outlook.com")) {
             user.setRole(Roles.ADMIN.getRole());
         } else {

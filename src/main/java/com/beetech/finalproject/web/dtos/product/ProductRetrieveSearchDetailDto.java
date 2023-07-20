@@ -11,5 +11,7 @@ public class ProductRetrieveSearchDetailDto {
     private String productName;
     private String detailInfo;
     private Double price;
-    private List<ImageRetrieveDto> imageRetrieveDtos;
+    private String name;
+    private String path;
+    private List<ImageRetrieveDto> detailImages;
 }

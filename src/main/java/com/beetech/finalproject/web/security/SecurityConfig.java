@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/delete-category").hasRole("ADMIN")
                         .requestMatchers("/api/v1/create-product").hasRole("ADMIN")
                         .requestMatchers("/api/v1/delete-product").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/update-product").hasRole("ADMIN")
                         .requestMatchers("/api/v1/create-order").hasRole("USER")
                 )
                 // For all others url need to be authenticated

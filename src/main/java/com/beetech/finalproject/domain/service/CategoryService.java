@@ -115,7 +115,6 @@ public class CategoryService {
         ImageForCategory imageForCategory = new ImageForCategory();
         imageForCategory.setPath(uploadFile(categoryCreateDto.getImage()));
         imageForCategory.setName(categoryCreateDto.getImage().getOriginalFilename());
-
         imageForCategoryRepository.save(imageForCategory);
         log.info("Save new image for category success!");
 
