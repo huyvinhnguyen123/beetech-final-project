@@ -4,6 +4,7 @@ import com.beetech.finalproject.common.AuthException;
 import com.beetech.finalproject.domain.service.CartService;
 import com.beetech.finalproject.web.common.ResponseDto;
 import com.beetech.finalproject.web.dtos.cart.*;
+import com.beetech.finalproject.web.response.CartResponse;
 import com.beetech.finalproject.web.response.CartResponseCreate;
 import com.beetech.finalproject.web.response.CartResponseSync;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +50,23 @@ public class CartController {
             return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
         } catch (AuthenticationException e) {
             log.error("Sync cart failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @PostMapping("/cart-info")
+    public ResponseEntity<ResponseDto<Object>> displayCart(@RequestBody TokenInputDto tokenInputDto) {
+        log.info("request displaying cart");
+
+        try {
+            CartRetrieveDto cartRetrieveDto = cartService.displayCart(tokenInputDto);
+            CartResponse cartResponse = CartResponse.builder()
+                    .cartRetrieveDto(cartRetrieveDto)
+                    .build();
+
+            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
+        } catch (AuthenticationException e) {
+            log.error("Display cart failed: " + e.getMessage());
             throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
         }
     }

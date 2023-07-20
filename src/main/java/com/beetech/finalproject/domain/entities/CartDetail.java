@@ -1,5 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,15 +31,18 @@ public class CartDetail {
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
+    @Column(name = "status_code")
+    private int statusCode;
+
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
+    @JsonBackReference
     private Cart cart;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JsonIgnoreProperties
+    @JsonBackReference
     private Product product;
 }

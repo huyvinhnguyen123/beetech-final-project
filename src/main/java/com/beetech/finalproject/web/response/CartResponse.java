@@ -1,7 +1,6 @@
 package com.beetech.finalproject.web.response;
 
-import com.beetech.finalproject.web.dtos.cart.CartCreateDto;
-import com.beetech.finalproject.web.dtos.cart.CartRetrieveCreateDto;
+import com.beetech.finalproject.web.dtos.cart.CartRetrieveDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartResponse {
-    private CartRetrieveCreateDto cartRetrieveCreateDto;
+    private CartRetrieveDto cartRetrieveDto;
 }

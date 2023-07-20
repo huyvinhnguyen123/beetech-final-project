@@ -1,9 +1,7 @@
 package com.beetech.finalproject.domain.service;
 
-import com.beetech.finalproject.domain.entities.Cart;
-import com.beetech.finalproject.domain.entities.CartDetail;
-import com.beetech.finalproject.domain.entities.Product;
-import com.beetech.finalproject.domain.entities.User;
+import com.beetech.finalproject.domain.entities.*;
+import com.beetech.finalproject.domain.enums.Status;
 import com.beetech.finalproject.domain.repository.CartDetailRepository;
 import com.beetech.finalproject.domain.repository.CartRepository;
 import com.beetech.finalproject.domain.repository.ProductRepository;
@@ -54,7 +52,7 @@ public class CartService {
 
         User existingUser = extractUserFromToken(cartCreateDto.getToken());
         if(existingUser == null) {
-            log.error("Not found this user");
+            log.info("Not authentication");
             cartToken = CustomGenerate.generateRandomString(20);
         }
 
@@ -84,6 +82,7 @@ public class CartService {
         cartDetail.setQuantity(cartCreateDto.getQuantity());
         cartDetail.setPrice(existingProduct.getPrice());
         cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
+        cartDetail.setStatusCode(Status.ACTIVE.getCode());
         cartDetailRepository.save(cartDetail);
         log.info("Save new cart detail success");
 
@@ -162,6 +161,98 @@ public class CartService {
         }
 
         return cartRetrieveSyncDto;
+    }
+
+    /**
+     * display cart
+     *
+     * @param tokenInputDto - input token
+     * @return - cart
+     */
+    public CartRetrieveDto displayCart(TokenInputDto tokenInputDto) {
+        CartRetrieveDto cartRetrieveDto = new CartRetrieveDto();
+        CartDetailRetrieveDto cartDetailRetrieveDto = new CartDetailRetrieveDto();
+
+        List<CartDetailRetrieveDto> cartDetailRetrieveDtos = new ArrayList<>();
+
+        User existingUser = extractUserFromToken(tokenInputDto.getAuthenticationToken());
+        if(existingUser == null) {
+            log.info("Not authentication");
+            Cart cartWithoutLogin = cartRepository.findByToken(tokenInputDto.getCartToken());
+            cartRetrieveDto.setCartId(cartWithoutLogin.getCartId());
+            cartRetrieveDto.setTotalPrice(cartWithoutLogin.getTotalPrice());
+            cartRetrieveDto.setVersionNo(cartWithoutLogin.getVersionNo());
+
+            for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
+                cartDetailRetrieveDto.setCartDetailId(cartDetail.getCartDetailId());
+                cartDetailRetrieveDto.setProductId(cartDetail.getProduct().getProductId());
+                cartDetailRetrieveDto.setProductName(cartDetail.getProduct().getProductName());
+                cartDetailRetrieveDto.setQuantity(cartDetail.getQuantity());
+                cartDetailRetrieveDto.setPrice(cartDetail.getPrice());
+                cartDetailRetrieveDto.setTotalPrice(cartDetail.getTotalPrice());
+
+                for(ProductImage productImage: cartDetail.getProduct().getProductImages()) {
+                    cartDetailRetrieveDto.setImagePath(productImage.getImageForProduct().getPath());
+                    cartDetailRetrieveDto.setImageName(productImage.getImageForProduct().getName());
+                }
+
+                switch (cartDetail.getStatusCode()) {
+                    case 1 -> cartDetailRetrieveDto.setStatus(Status.ACTIVE.getStatus());
+                    case 2 -> cartDetailRetrieveDto.setStatus(Status.PENDING.getStatus());
+                    case 3 -> cartDetailRetrieveDto.setStatus(Status.CHECKED_OUT.getStatus());
+                    case 4 -> cartDetailRetrieveDto.setStatus(Status.EXPIRED.getStatus());
+                    case 5 -> cartDetailRetrieveDto.setStatus(Status.ABANDONED.getStatus());
+                    case 6 -> cartDetailRetrieveDto.setStatus(Status.SAVED.getStatus());
+                    case 7 -> cartDetailRetrieveDto.setStatus(Status.DELETED.getStatus());
+                    default -> {
+                        log.error("Not found this status");
+                        throw new RuntimeException("This status is not existed");
+                    }
+                }
+                cartDetailRetrieveDtos.add(cartDetailRetrieveDto);
+            }
+            cartRetrieveDto.setCartDetailRetrieveDtos(cartDetailRetrieveDtos);
+            log.info("Get cart without login success");
+        } else {
+            Cart cartLogin = existingUser.getCart();
+            cartRetrieveDto.setCartId(cartLogin.getCartId());
+            cartRetrieveDto.setTotalPrice(cartLogin.getTotalPrice());
+            cartRetrieveDto.setVersionNo(cartLogin.getVersionNo());
+
+            for(CartDetail cartDetail: cartLogin.getCartDetails()) {
+                cartDetailRetrieveDto.setCartDetailId(cartDetail.getCartDetailId());
+                cartDetailRetrieveDto.setProductId(cartDetail.getProduct().getProductId());
+                cartDetailRetrieveDto.setProductName(cartDetail.getProduct().getProductName());
+                cartDetailRetrieveDto.setQuantity(cartDetail.getQuantity());
+                cartDetailRetrieveDto.setPrice(cartDetail.getPrice());
+                cartDetailRetrieveDto.setTotalPrice(cartDetail.getTotalPrice());
+
+                for(ProductImage productImage: cartDetail.getProduct().getProductImages()) {
+                    cartDetailRetrieveDto.setImagePath(productImage.getImageForProduct().getPath());
+                    cartDetailRetrieveDto.setImageName(productImage.getImageForProduct().getName());
+                }
+
+                switch (cartDetail.getStatusCode()) {
+                    case 1 -> cartDetailRetrieveDto.setStatus(Status.ACTIVE.getStatus());
+                    case 2 -> cartDetailRetrieveDto.setStatus(Status.PENDING.getStatus());
+                    case 3 -> cartDetailRetrieveDto.setStatus(Status.CHECKED_OUT.getStatus());
+                    case 4 -> cartDetailRetrieveDto.setStatus(Status.EXPIRED.getStatus());
+                    case 5 -> cartDetailRetrieveDto.setStatus(Status.ABANDONED.getStatus());
+                    case 6 -> cartDetailRetrieveDto.setStatus(Status.SAVED.getStatus());
+                    case 7 -> cartDetailRetrieveDto.setStatus(Status.DELETED.getStatus());
+                    default -> {
+                        log.error("Not found this status");
+                        throw new RuntimeException("This status is not existed");
+                    }
+                }
+                cartDetailRetrieveDtos.add(cartDetailRetrieveDto);
+            }
+            cartRetrieveDto.setCartDetailRetrieveDtos(cartDetailRetrieveDtos);
+            log.info("Get cart login success");
+        }
+
+        log.info("display cart success");
+        return cartRetrieveDto;
     }
 
     /**
