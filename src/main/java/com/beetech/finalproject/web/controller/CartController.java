@@ -4,10 +4,7 @@ import com.beetech.finalproject.common.AuthException;
 import com.beetech.finalproject.domain.service.CartService;
 import com.beetech.finalproject.web.common.ResponseDto;
 import com.beetech.finalproject.web.dtos.cart.*;
-import com.beetech.finalproject.web.response.CartQuantitySumResponse;
-import com.beetech.finalproject.web.response.CartResponse;
-import com.beetech.finalproject.web.response.CartResponseCreate;
-import com.beetech.finalproject.web.response.CartResponseSync;
+import com.beetech.finalproject.web.response.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -73,11 +70,11 @@ public class CartController {
     }
 
     @GetMapping("/cart-quantity")
-    public ResponseEntity<ResponseDto<Object>> getSumQuantityInCart(@RequestBody TokenInputDto tokenInputDto) {
+    public ResponseEntity<ResponseDto<Object>> getTotalQuantityInCart(@RequestBody TokenInputDto tokenInputDto) {
         log.info("request displaying cart");
 
         try {
-            CartSumQuantityDto cartSumQuantityDto = cartService.getSumQuantityInCart(tokenInputDto);
+            CartSumQuantityDto cartSumQuantityDto = cartService.getTotalQuantityInCart(tokenInputDto);
             CartQuantitySumResponse cartResponse = CartQuantitySumResponse.builder()
                     .cartSumQuantityDto(cartSumQuantityDto)
                     .build();
@@ -89,7 +86,24 @@ public class CartController {
         }
     }
 
-    @PostMapping("/delete-cart")
+    @PostMapping("/update-cart")
+    public ResponseEntity<ResponseDto<Object>> updateCart(@RequestBody CartUpdateDto cartUpdateDto) {
+        log.info("request updating cart");
+
+        try {
+            CartRetrieveUpdateDto cartRetrieveUpdateDto = cartService.updateCart(cartUpdateDto);
+            CartUpdateResponse cartResponse = CartUpdateResponse.builder()
+                    .cartRetrieveUpdateDto(cartRetrieveUpdateDto)
+                    .build();
+
+            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
+        } catch (AuthenticationException e) {
+            log.error("Update cart failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @DeleteMapping("/delete-cart")
     public ResponseEntity<ResponseDto<Object>> deleteCart(@RequestBody CartDeleteDto cartDeleteDto) {
         log.info("request deleting cart");
 
