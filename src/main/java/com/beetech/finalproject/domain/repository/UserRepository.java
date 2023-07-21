@@ -5,6 +5,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserRepository extends CrudRepository<User, String>, ListCrudRepository<User, String> {
     /**
@@ -13,4 +15,11 @@ public interface UserRepository extends CrudRepository<User, String>, ListCrudRe
      * @return - user
      */
     User findByLoginId(String loginId);
+
+    /**
+     * find by username
+     * @param username - input username
+     * @return - user
+     */
+    Optional<User> findByUsername(String username);
 }
