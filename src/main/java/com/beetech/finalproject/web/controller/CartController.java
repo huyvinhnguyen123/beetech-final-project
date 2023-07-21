@@ -4,6 +4,7 @@ import com.beetech.finalproject.common.AuthException;
 import com.beetech.finalproject.domain.service.CartService;
 import com.beetech.finalproject.web.common.ResponseDto;
 import com.beetech.finalproject.web.dtos.cart.*;
+import com.beetech.finalproject.web.response.CartQuantitySumResponse;
 import com.beetech.finalproject.web.response.CartResponse;
 import com.beetech.finalproject.web.response.CartResponseCreate;
 import com.beetech.finalproject.web.response.CartResponseSync;
@@ -62,6 +63,23 @@ public class CartController {
             CartRetrieveDto cartRetrieveDto = cartService.displayCart(tokenInputDto);
             CartResponse cartResponse = CartResponse.builder()
                     .cartRetrieveDto(cartRetrieveDto)
+                    .build();
+
+            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
+        } catch (AuthenticationException e) {
+            log.error("Display cart failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
+
+    @GetMapping("/cart-quantity")
+    public ResponseEntity<ResponseDto<Object>> getSumQuantityInCart(@RequestBody TokenInputDto tokenInputDto) {
+        log.info("request displaying cart");
+
+        try {
+            CartSumQuantityDto cartSumQuantityDto = cartService.getSumQuantityInCart(tokenInputDto);
+            CartQuantitySumResponse cartResponse = CartQuantitySumResponse.builder()
+                    .cartSumQuantityDto(cartSumQuantityDto)
                     .build();
 
             return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));

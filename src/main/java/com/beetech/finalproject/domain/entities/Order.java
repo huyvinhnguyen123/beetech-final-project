@@ -1,5 +1,6 @@
 package com.beetech.finalproject.domain.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,8 +26,8 @@ public class Order {
     @Column(name = "display_id", nullable = false)
     private int displayId; // if 1 is display if 0 it's not
 
-    @Column(name = "status", nullable = false)
-    private int status;
+    @Column(name = "status_code", nullable = false)
+    private int statusCode;
 
     @Column(name = "order_date", nullable = false)
     private LocalDate orderDate;
@@ -34,14 +35,19 @@ public class Order {
     @Column(name = "user_note")
     private String userNote;
 
-    @Column(name = "total price")
+    @Column(name = "total_price")
     private double totalPrice;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnoreProperties
+    @JsonBackReference
     private User user;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
     private List<OrderDetail> orderDetails;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
+    private List<OrderShippingDetail> orderShippingDetails;
 }

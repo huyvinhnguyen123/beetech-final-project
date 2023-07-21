@@ -1,16 +1,20 @@
 package com.beetech.finalproject.domain.service;
 
 import com.beetech.finalproject.domain.entities.*;
+import com.beetech.finalproject.domain.enums.Status;
 import com.beetech.finalproject.domain.repository.*;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
-import com.beetech.finalproject.web.dtos.order.OrderCreateDto;
-import com.beetech.finalproject.web.dtos.order.OrderRetrieveCreateDto;
+import com.beetech.finalproject.web.dtos.order.*;
 import com.beetech.finalproject.web.security.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -67,7 +71,7 @@ public class OrderService {
         int id = rnd.nextInt(4,10000);
         order.setDisplayId(Integer.parseInt(String.format("%04d", id)));
         order.setUser(existingUser);
-        order.setStatus(1);
+        order.setStatusCode(1);
         order.setOrderDate(CustomDateTimeFormatter.dateOfOrder());
         order.setUserNote(existingCart.getUserNote());
         orderRepository.save(order);
@@ -104,7 +108,7 @@ public class OrderService {
             }
         }
         orderShippingDetail.setAddress(orderCreateDto.getAddress());
-        orderShippingDetail.setPhoneNumber(orderShippingDetail.getPhoneNumber());
+        orderShippingDetail.setPhoneNumber(orderCreateDto.getPhoneNumber());
         orderShippingDetailRepository.save(orderShippingDetail);
         log.info("Save order shipping detail success");
 

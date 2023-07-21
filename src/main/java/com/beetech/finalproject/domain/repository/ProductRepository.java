@@ -16,8 +16,8 @@ public interface ProductRepository extends CrudRepository<Product, Long>, ListCr
     @Query(value="SELECT p.product_id, p.sku, p.old_sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
             "ifp.name, ifp.path, c.category_id, COUNT(p.product_id) AS total_items\n" +
             "FROM product p\n" +
-            "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
-            "LEFT JOIN image_for_product ifp ON ifp.image_id = proimg.image_id\n" +
+            "LEFT JOIN product_image pro_img ON pro_img.product_id = p.product_id\n" +
+            "LEFT JOIN image_for_product ifp ON ifp.image_id = pro_img.image_id\n" +
             "LEFT JOIN product_category pc ON pc.product_id = p.product_id\n" +
             "LEFT JOIN category c ON c.category_id  = pc.category_id\n" +
             "WHERE c.category_id = :categoryId AND\n" +
@@ -30,8 +30,8 @@ public interface ProductRepository extends CrudRepository<Product, Long>, ListCr
     @Query(value="SELECT p.product_id, p.sku, p.old_sku, p.product_name, p.detail_info, p.price, p.delete_flag,\n" +
             "ifp.name, ifp.path\n" +
             "FROM product p\n" +
-            "LEFT JOIN product_image proimg ON proimg.product_id = p.product_id\n" +
-            "LEFT JOIN image_for_product ifp ON ifp.image_id = proimg.image_id\n" +
+            "LEFT JOIN product_image pro_img ON pro_img.product_id = p.product_id\n" +
+            "LEFT JOIN image_for_product ifp ON ifp.image_id = pro_img.image_id\n" +
             "WHERE p.sku LIKE %:sku% OR p.product_name LIKE %:productName%",
             nativeQuery = true)
     List<Product> searchProducts(@Param("sku") String sku, @Param("productName") String productName);

@@ -256,6 +256,44 @@ public class CartService {
     }
 
     /**
+     * Get sum quantity in cart
+     *
+     * @param tokenInputDto - input token
+     * @return - cartSumQuantityDto
+     */
+    public CartSumQuantityDto getSumQuantityInCart(TokenInputDto tokenInputDto) {
+        User existingUser = extractUserFromToken(tokenInputDto.getAuthenticationToken());
+        if(existingUser == null) {
+            log.info("Not authentication");
+            Cart cartWithoutLogin = cartRepository.findByToken(tokenInputDto.getCartToken());
+
+            CartSumQuantityDto cartSumQuantityDto = new CartSumQuantityDto();
+            int totalQuantitySum = 0;
+            for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
+                totalQuantitySum += cartDetail.getQuantity();
+            }
+            cartSumQuantityDto.setTotalQuantity(totalQuantitySum);
+            cartSumQuantityDto.setVersionNo(cartWithoutLogin.getVersionNo());
+
+            log.info("Get sum quantity in cart success");
+            return cartSumQuantityDto;
+        } else {
+            Cart cartLogin = existingUser.getCart();
+
+            CartSumQuantityDto cartSumQuantityDto = new CartSumQuantityDto();
+            int totalQuantitySum = 0;
+            for(CartDetail cartDetail: cartLogin.getCartDetails()) {
+                totalQuantitySum += cartDetail.getQuantity();
+            }
+            cartSumQuantityDto.setTotalQuantity(totalQuantitySum);
+            cartSumQuantityDto.setVersionNo(cartLogin.getVersionNo());
+
+            log.info("Get sum quantity in cart success");
+            return cartSumQuantityDto;
+        }
+    }
+
+    /**
      * Delete cart
      *
      * @param cartDeleteDto - input cartDeleteDto's properties
