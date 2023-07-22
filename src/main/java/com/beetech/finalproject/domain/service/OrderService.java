@@ -118,4 +118,83 @@ public class OrderService {
 
         return orderRetrieveCreateDto;
     }
+
+    /**
+     * display order
+     *
+     * @param orderSearchInputDto -input orderSearchInputDto's properties
+     * @param page - input page
+     * @return - list orders
+     */
+    public Page<OrderRetrieveSearchDto> searchOrdersAndPagination(OrderSearchInputDto orderSearchInputDto, Pageable page) {
+        User existingUser = extractUserFromToken(orderSearchInputDto.getToken());
+        if(existingUser == null) {
+            log.info("Not authentication");
+            userRepository.findById(orderSearchInputDto.getUserId()).orElseThrow(
+                    () -> {
+                        log.error("Not found this user");
+                        return new NullPointerException("Not found this user");
+                    }
+            );
+        }
+        log.info("Found user");
+
+        Page<Order> orders = orderRepository.searchOrdersAndPagination(orderSearchInputDto.getUsername(),
+                orderSearchInputDto.getProductName(), orderSearchInputDto.getSku(), existingUser.getUserId(),
+                orderSearchInputDto.getOrderId(), orderSearchInputDto.getStatusCode(), orderSearchInputDto.getOrderDate(),
+                page);
+
+        return orders.map(order -> {
+            OrderRetrieveSearchDto orderRetrieveSearchDto = new OrderRetrieveSearchDto();
+            orderRetrieveSearchDto.setOrderId(order.getOrderId());
+            orderRetrieveSearchDto.setDisplayId(order.getDisplayId());
+            orderRetrieveSearchDto.setUsername(order.getUser().getUsername());
+            orderRetrieveSearchDto.setTotalPrice(order.getTotalPrice());
+            orderRetrieveSearchDto.setOrderDate(order.getOrderDate());
+
+            switch (order.getStatusCode()) {
+                case 8 -> orderRetrieveSearchDto.setOrderStatus(Status.PLACED.getStatus());
+                case 9 -> orderRetrieveSearchDto.setOrderStatus(Status.PROCESSING.getStatus());
+                case 10 -> orderRetrieveSearchDto.setOrderStatus(Status.CONFIRMED.getStatus());
+                case 11 -> orderRetrieveSearchDto.setOrderStatus(Status.SHIPPED.getStatus());
+                case 12 -> orderRetrieveSearchDto.setOrderStatus(Status.DELIVERED.getStatus());
+                case 13 -> orderRetrieveSearchDto.setOrderStatus(Status.CANCELLED.getStatus());
+                case 14 -> orderRetrieveSearchDto.setOrderStatus(Status.REFUNDED.getStatus());
+                case 15 -> orderRetrieveSearchDto.setOrderStatus(Status.ON_HOLD.getStatus());
+                case 16 -> orderRetrieveSearchDto.setOrderStatus(Status.RETURNED.getStatus());
+                case 17 -> orderRetrieveSearchDto.setOrderStatus(Status.PARTIALLY_SHIPPED.getStatus());
+                case 18 -> orderRetrieveSearchDto.setOrderStatus(Status.PARTIALLY_DELIVERED.getStatus());
+                default -> {
+                    log.error("Not found this status");
+                    throw new RuntimeException("This status is not existed");
+                }
+            }
+
+            for(OrderShippingDetail orderShippingDetail: order.getOrderShippingDetails()) {
+                orderRetrieveSearchDto.setShippingAddress(orderShippingDetail.getAddress());
+                orderRetrieveSearchDto.setShippingCity(orderShippingDetail.getCity().getCityName());
+                orderRetrieveSearchDto.setShippingDistrict(orderShippingDetail.getDistrict().getDistrictName());
+                orderRetrieveSearchDto.setShippingPhoneNumber(orderShippingDetail.getPhoneNumber());
+            }
+
+            List<OrderDetailRetrieveDto> orderDetailRetrieveDtos = new ArrayList<>();
+            for(OrderDetail orderDetail: order.getOrderDetails()) {
+                OrderDetailRetrieveDto orderDetailRetrieveDto = new OrderDetailRetrieveDto();
+                orderDetailRetrieveDto.setOrderDetailId(orderDetail.getOrderDetailId());
+                orderDetailRetrieveDto.setProductId(orderDetail.getProduct().getProductId());
+                orderDetailRetrieveDto.setProductName(orderDetail.getProduct().getProductName());
+
+                for(ProductImage productImage: orderDetail.getProduct().getProductImages()) {
+                    orderDetailRetrieveDto.setImagePath(productImage.getImageForProduct().getPath());
+                    orderDetailRetrieveDto.setImageName(productImage.getImageForProduct().getName());
+                }
+                orderDetailRetrieveDtos.add(orderDetailRetrieveDto);
+            }
+
+            orderRetrieveSearchDto.setOrderDetailRetrieveDtos(orderDetailRetrieveDtos);
+
+            log.info("Search orders success");
+            return orderRetrieveSearchDto;
+        });
+    }
 }

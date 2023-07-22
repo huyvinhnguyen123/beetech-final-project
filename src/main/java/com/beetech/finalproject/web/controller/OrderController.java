@@ -48,4 +48,30 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/orders")
+    public ResponseEntity<ResponseDto<Object>> searchOrdersAndPagination(@RequestParam(defaultValue = "0") int page,
+                                                                           @RequestParam(defaultValue = "10") int size,
+                                                                           @RequestBody
+                                                                         OrderSearchInputDto orderSearchInputDto) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        log.info("request searching orders");
+        try {
+            Page<OrderRetrieveSearchDto> orderRetrieveSearchDtoPage = orderService.searchOrdersAndPagination(orderSearchInputDto, pageable);
+            List<OrderRetrieveSearchDto> orderRetrieveSearchDtos = orderRetrieveSearchDtoPage.getContent();
+
+            // add result inside response
+            List<OrderSearchResponse> orderSearchResponses = new ArrayList<>();
+            OrderSearchResponse orderSearchResponse =  OrderSearchResponse.builder()
+                    .orderRetrieveSearchDtos(orderRetrieveSearchDtos)
+                    .build();
+
+            orderSearchResponses.add(orderSearchResponse);
+
+            return ResponseEntity.ok(ResponseDto.build().withData(orderSearchResponses));
+        } catch (AuthenticationException e) {
+            log.error("Search orders failed: " + e.getMessage());
+            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
+        }
+    }
 }

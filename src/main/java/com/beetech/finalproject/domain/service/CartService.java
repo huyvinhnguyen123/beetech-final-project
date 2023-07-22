@@ -261,7 +261,7 @@ public class CartService {
      * @param tokenInputDto - input token
      * @return - cartSumQuantityDto
      */
-    public CartSumQuantityDto getSumQuantityInCart(TokenInputDto tokenInputDto) {
+    public CartSumQuantityDto getTotalQuantityInCart(TokenInputDto tokenInputDto) {
         User existingUser = extractUserFromToken(tokenInputDto.getAuthenticationToken());
         if(existingUser == null) {
             log.info("Not authentication");
@@ -275,7 +275,7 @@ public class CartService {
             cartSumQuantityDto.setTotalQuantity(totalQuantitySum);
             cartSumQuantityDto.setVersionNo(cartWithoutLogin.getVersionNo());
 
-            log.info("Get sum quantity in cart success");
+            log.info("Get total quantity in cart success");
             return cartSumQuantityDto;
         } else {
             Cart cartLogin = existingUser.getCart();
@@ -288,8 +288,73 @@ public class CartService {
             cartSumQuantityDto.setTotalQuantity(totalQuantitySum);
             cartSumQuantityDto.setVersionNo(cartLogin.getVersionNo());
 
-            log.info("Get sum quantity in cart success");
+            log.info("Get total quantity in cart success");
             return cartSumQuantityDto;
+        }
+    }
+
+    /**
+     * update cart
+     *
+     * @param cartUpdateDto - input cartUpdateDto's properties
+     * @return - cartRetrieveUpdateDto
+     */
+    @Transactional
+    public CartRetrieveUpdateDto updateCart(CartUpdateDto cartUpdateDto) {
+        User existingUser = extractUserFromToken(cartUpdateDto.getAuthenticationToken());
+        if(existingUser == null) {
+            log.info("Not authentication");
+            CartRetrieveUpdateDto cartRetrieveUpdateDto = new CartRetrieveUpdateDto();
+            int totalQuantity = 0;
+            double totalPrice = 0.0;
+
+            Cart cartWithoutLogin = cartRepository.findByToken(cartUpdateDto.getCartToken());
+            if(cartWithoutLogin.getVersionNo().equals(cartUpdateDto.getVersionNo())) {
+                for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
+                    if(cartDetail.getCartDetailId().equals(cartUpdateDto.getCartDetailId())) {
+                        cartDetail.setQuantity(cartUpdateDto.getQuantity());
+                        cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
+                        cartDetailRepository.save(cartDetail);
+                        log.info("Update cart detail success");
+
+                        totalQuantity += cartDetail.getQuantity();
+                        totalPrice +=  cartDetail.getTotalPrice();
+                    }
+                }
+                cartWithoutLogin.setTotalPrice(totalPrice);
+                cartWithoutLogin.setVersionNo(cartUpdateDto.getVersionNo() + 1);
+                cartRepository.save(cartWithoutLogin);
+                log.info("Update cart success");
+
+                cartRetrieveUpdateDto.setTotalQuantity(totalQuantity);
+            }
+            return cartRetrieveUpdateDto;
+        } else {
+            CartRetrieveUpdateDto cartRetrieveUpdateDto = new CartRetrieveUpdateDto();
+            int totalQuantity = 0;
+            double totalPrice = 0.0;
+
+            Cart cartLogin = existingUser.getCart();
+            if(cartLogin.getVersionNo().equals(cartUpdateDto.getVersionNo())) {
+                for(CartDetail cartDetail: cartLogin.getCartDetails()) {
+                    if(cartDetail.getCartDetailId().equals(cartUpdateDto.getCartDetailId())) {
+                        cartDetail.setQuantity(cartUpdateDto.getQuantity());
+                        cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
+                        cartDetailRepository.save(cartDetail);
+                        log.info("Update cart detail success");
+
+                        totalQuantity += cartDetail.getQuantity();
+                        totalPrice +=  cartDetail.getTotalPrice();
+                    }
+                }
+                cartLogin.setTotalPrice(totalPrice);
+                cartLogin.setVersionNo(cartUpdateDto.getVersionNo() + 1);
+                cartRepository.save(cartLogin);
+                log.info("Update cart success");
+
+                cartRetrieveUpdateDto.setTotalQuantity(totalQuantity);
+            }
+            return cartRetrieveUpdateDto;
         }
     }
 
