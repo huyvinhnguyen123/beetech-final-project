@@ -35,7 +35,8 @@ public interface OrderRepository extends CrudRepository<Order, Long>, ListCrudRe
             "AND u.user_id = :userId\n" +
             "AND op.order_id = :orderId\n" +
             "AND op.status_code = :statusCode\n" +
-            "AND op.order_date = :orderDate", nativeQuery = true)
+            "AND op.order_date = :orderDate",
+            nativeQuery = true)
     Page<Order> searchOrdersAndPagination(@Param("username") String username,
                                          @Param("productName") String productName,
                                          @Param("sku") String sku,

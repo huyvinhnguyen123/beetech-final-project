@@ -120,7 +120,7 @@ public class OrderService {
     }
 
     /**
-     * display order
+     * search order and pagination
      *
      * @param orderSearchInputDto -input orderSearchInputDto's properties
      * @param page - input page
@@ -147,7 +147,6 @@ public class OrderService {
         return orders.map(order -> {
             OrderRetrieveSearchDto orderRetrieveSearchDto = new OrderRetrieveSearchDto();
             orderRetrieveSearchDto.setOrderId(order.getOrderId());
-            orderRetrieveSearchDto.setDisplayId(order.getDisplayId());
             orderRetrieveSearchDto.setUsername(order.getUser().getUsername());
             orderRetrieveSearchDto.setTotalPrice(order.getTotalPrice());
             orderRetrieveSearchDto.setOrderDate(order.getOrderDate());
@@ -183,6 +182,9 @@ public class OrderService {
                 orderDetailRetrieveDto.setOrderDetailId(orderDetail.getOrderDetailId());
                 orderDetailRetrieveDto.setProductId(orderDetail.getProduct().getProductId());
                 orderDetailRetrieveDto.setProductName(orderDetail.getProduct().getProductName());
+                orderDetailRetrieveDto.setQuantity(orderDetail.getQuantity());
+                orderDetailRetrieveDto.setPrice(orderDetail.getProduct().getPrice());
+                orderDetailRetrieveDto.setTotalPrice(orderDetail.getTotalPrice());
 
                 for(ProductImage productImage: orderDetail.getProduct().getProductImages()) {
                     orderDetailRetrieveDto.setImagePath(productImage.getImageForProduct().getPath());
@@ -196,5 +198,22 @@ public class OrderService {
             log.info("Search orders success");
             return orderRetrieveSearchDto;
         });
+    }
+
+    public Order updateOrder(OrderUpdateDto orderUpdateDto) {
+        Order existingOrder = orderRepository.findById(orderUpdateDto.getOrderId()).orElseThrow(
+                ()->{
+                    log.error("Not found this order");
+                    return new NullPointerException("Not found this order");
+                }
+        );
+        log.info("Found order");
+
+        existingOrder.setStatusCode(orderUpdateDto.getStatusCode());
+        existingOrder.setDisplayId(orderUpdateDto.getDisplayId());
+        orderRepository.save(existingOrder);
+        log.info("update order success");
+
+        return existingOrder;
     }
 }

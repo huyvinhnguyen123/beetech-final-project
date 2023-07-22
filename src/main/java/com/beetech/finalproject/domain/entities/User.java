@@ -36,7 +36,7 @@ public class User implements UserDetails {
     @Column(name = "birth_day", nullable = false)
     private LocalDate birthDay;
 
-    @Column(name = "login_id", length = 255, nullable = false, unique = true)
+    @Column(name = "login_id", length = 255, unique = true)
     private String loginId; // loginId = email
 
     @Column(name = "password", length = 255, nullable = false)
@@ -49,6 +49,9 @@ public class User implements UserDetails {
     private int deleteFlag;
 
     private String role;
+
+    @Column(name = "old_login_id")
+    private String oldLoginId;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnoreProperties
