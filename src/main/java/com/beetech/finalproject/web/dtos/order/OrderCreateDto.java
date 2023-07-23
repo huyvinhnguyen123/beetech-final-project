@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class OrderCreateDto {
-    private String authenticationToken;
     private String phoneNumber;
     private String address;
     private String district;

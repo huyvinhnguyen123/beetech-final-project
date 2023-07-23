@@ -6,7 +6,6 @@ import java.time.LocalDate;
 
 @Data
 public class OrderSearchInputDto {
-    private String token;
     private String userId;
     private String username;
     private Long orderId;

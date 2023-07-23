@@ -1,6 +1,8 @@
 package com.beetech.finalproject.domain.service;
 
+import com.beetech.finalproject.common.AuthException;
 import com.beetech.finalproject.domain.entities.*;
+import com.beetech.finalproject.domain.enums.Roles;
 import com.beetech.finalproject.domain.enums.Status;
 import com.beetech.finalproject.domain.repository.*;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
@@ -10,6 +12,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,24 +32,9 @@ public class OrderService {
     private final OrderDetailRepository orderDetailRepository;
     private final OrderShippingDetailRepository orderShippingDetailRepository;
     private final UserRepository userRepository;
-    private final CartRepository cartRepository;
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
     private final JwtUtils jwtUtils;
-
-    /**
-     * Extract login id(email) from token when user authentication
-     *
-     * @param token - token from authentication
-     * @return - user
-     */
-    private User extractUserFromToken(String token) {
-        String loginId = jwtUtils.extractUsername(token);
-        User user = userRepository.findByLoginId(loginId);
-        log.info("Extract user from token success");
-        return user;
-    }
-
 
     /**
      * create order from cart
@@ -51,12 +43,8 @@ public class OrderService {
      * @return - orderRetrieveCreateDto
      */
     @Transactional
-    public OrderRetrieveCreateDto createOrderFromCart(OrderCreateDto orderCreateDto) {
-        User existingUser = extractUserFromToken(orderCreateDto.getAuthenticationToken());
-        if(existingUser == null) {
-            log.error("Not found this user");
-            throw new NullPointerException("Not found this user");
-        }
+    public OrderRetrieveCreateDto createOrderFromCart(OrderCreateDto orderCreateDto, User user) {
+        User existingUser = user;
         log.info("Found user");
 
         Cart existingCart = existingUser.getCart();
@@ -71,7 +59,7 @@ public class OrderService {
         int id = rnd.nextInt(4,10000);
         order.setDisplayId(Integer.parseInt(String.format("%04d", id)));
         order.setUser(existingUser);
-        order.setStatusCode(1);
+        order.setStatusCode(8);
         order.setOrderDate(CustomDateTimeFormatter.dateOfOrder());
         order.setUserNote(existingCart.getUserNote());
         orderRepository.save(order);
@@ -126,17 +114,9 @@ public class OrderService {
      * @param page - input page
      * @return - list orders
      */
-    public Page<OrderRetrieveSearchDto> searchOrdersAndPagination(OrderSearchInputDto orderSearchInputDto, Pageable page) {
-        User existingUser = extractUserFromToken(orderSearchInputDto.getToken());
-        if(existingUser == null) {
-            log.info("Not authentication");
-            userRepository.findById(orderSearchInputDto.getUserId()).orElseThrow(
-                    () -> {
-                        log.error("Not found this user");
-                        return new NullPointerException("Not found this user");
-                    }
-            );
-        }
+    public Page<OrderRetrieveSearchDto> searchOrdersAndPagination(OrderSearchInputDto orderSearchInputDto,
+                                                                  Pageable page, User user) {
+        User existingUser = user;
         log.info("Found user");
 
         Page<Order> orders = orderRepository.searchOrdersAndPagination(orderSearchInputDto.getUsername(),
@@ -147,6 +127,7 @@ public class OrderService {
         return orders.map(order -> {
             OrderRetrieveSearchDto orderRetrieveSearchDto = new OrderRetrieveSearchDto();
             orderRetrieveSearchDto.setOrderId(order.getOrderId());
+            orderRetrieveSearchDto.setDisplayId(order.getDisplayId());
             orderRetrieveSearchDto.setUsername(order.getUser().getUsername());
             orderRetrieveSearchDto.setTotalPrice(order.getTotalPrice());
             orderRetrieveSearchDto.setOrderDate(order.getOrderDate());
@@ -200,20 +181,33 @@ public class OrderService {
         });
     }
 
-    public Order updateOrder(OrderUpdateDto orderUpdateDto) {
+    /**
+     * update order
+     *
+     * @param orderUpdateDto - input orderUpdateDto's properties
+     * @return - order
+     */
+    public OrderRetrieveCreateDto updateOrder(OrderUpdateDto orderUpdateDto, User user) {
         Order existingOrder = orderRepository.findById(orderUpdateDto.getOrderId()).orElseThrow(
-                ()->{
+                () -> {
                     log.error("Not found this order");
                     return new NullPointerException("Not found this order");
                 }
         );
         log.info("Found order");
 
-        existingOrder.setStatusCode(orderUpdateDto.getStatusCode());
-        existingOrder.setDisplayId(orderUpdateDto.getDisplayId());
-        orderRepository.save(existingOrder);
-        log.info("update order success");
+        if(user.getUserId().equals(existingOrder.getUser().getUserId()) ||
+               user.getRole().equals(Roles.ADMIN.getRole())) {
+            existingOrder.setStatusCode(orderUpdateDto.getStatusCode());
+            existingOrder.setDisplayId(orderUpdateDto.getDisplayId());
+            orderRepository.save(existingOrder);
+            log.info("update order success");
+        }
 
-        return existingOrder;
+        OrderRetrieveCreateDto orderRetrieveCreateDto = new OrderRetrieveCreateDto();
+        orderRetrieveCreateDto.setDisplayId(existingOrder.getDisplayId());
+        orderRetrieveCreateDto.setTotalPrice(existingOrder.getTotalPrice());
+
+        return orderRetrieveCreateDto;
     }
 }
