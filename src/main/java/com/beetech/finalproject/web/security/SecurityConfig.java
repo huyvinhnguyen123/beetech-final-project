@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/upload/**").permitAll()
                         .requestMatchers("/api/v1/auth/register").permitAll()
                         .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/add-cart").permitAll()
                 )
                 .authorizeHttpRequests((requests) -> requests // allow for login authentication & for ROLE_USER and ROLE_ADMIN
                         // for all request in this url has role admin & user will be access

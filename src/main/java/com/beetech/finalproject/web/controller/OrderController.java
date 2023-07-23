@@ -33,10 +33,10 @@ public class OrderController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ResponseDto<Object>> createOrderFromCart(@RequestBody OrderCreateDto orderCreateDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("request creating order");
         try {
             User currentUser = (User) authentication.getPrincipal();
 
-            log.info("request creating order");
             OrderRetrieveCreateDto orderRetrieveCreateDto = orderService.createOrderFromCart(orderCreateDto, currentUser);
             OrderResponseCreate orderResponse = OrderResponseCreate.builder()
                     .orderRetrieveCreateDto(orderRetrieveCreateDto)
@@ -81,10 +81,10 @@ public class OrderController {
     @PostMapping("/update-order")
     public ResponseEntity<ResponseDto<Object>> updateOrder(@RequestBody OrderUpdateDto orderUpdateDto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("request creating order");
         try {
             User currentUser = (User) authentication.getPrincipal();
 
-            log.info("request creating order");
             OrderRetrieveCreateDto orderRetrieveCreateDto = orderService.updateOrder(orderUpdateDto, currentUser);
             OrderResponseCreate orderResponse = OrderResponseCreate.builder()
                     .orderRetrieveCreateDto(orderRetrieveCreateDto)

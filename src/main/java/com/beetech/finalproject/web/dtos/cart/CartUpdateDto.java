@@ -4,8 +4,7 @@ import lombok.Data;
 
 @Data
 public class CartUpdateDto {
-    private String authenticationToken;
-    private String cartToken;
+    private String token;
     private Long cartDetailId;
     private int quantity;
     private Double versionNo;

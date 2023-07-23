@@ -8,9 +8,13 @@ import com.beetech.finalproject.domain.enums.Roles;
 import com.beetech.finalproject.domain.repository.UserRepository;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
+import com.beetech.finalproject.web.dtos.user.UserRetrieveDto;
+import com.beetech.finalproject.web.dtos.user.UserSearchDto;
 import com.beetech.finalproject.web.security.PasswordEncrypt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -76,5 +80,30 @@ public class UserService {
                 throw new AccountException(AccountException.ErrorStatus.LOCKED_ACCOUNT, "The email is already registered and the account is locked.");
             }
         }
+    }
+
+    /**
+     * search user and pagination with condition success
+     *
+     * @param userSearchDto
+     * @param pageable
+     * @return
+     */
+    public Page<UserRetrieveDto> searchUserAndPagination(UserSearchDto userSearchDto, Pageable pageable) {
+        Page<User> users = userRepository.searchListOfUserWithCondition(userSearchDto.getStartDate(),
+                userSearchDto.getEndDate(), userSearchDto.getTotalPrice(), userSearchDto.getLoginId(),
+                userSearchDto.getUsername(), pageable);
+
+        return users.map(user -> {
+            UserRetrieveDto userRetrieveDto = new UserRetrieveDto();
+            userRetrieveDto.setUserId(user.getUserId());
+            userRetrieveDto.setLoginId(user.getLoginId());
+            userRetrieveDto.setUsername(user.getUsername());
+            userRetrieveDto.setBirthDay(user.getBirthDay());
+            userRetrieveDto.setTotalPrice(user.getCart().getTotalPrice());
+
+            log.info("Search user and pagination with condition success");
+            return userRetrieveDto;
+        });
     }
 }

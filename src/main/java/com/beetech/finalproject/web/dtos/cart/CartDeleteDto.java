@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class CartDeleteDto {
-    private String authenticationToken;
     private String token;
     private int clearCart;
     private Long detailId;
