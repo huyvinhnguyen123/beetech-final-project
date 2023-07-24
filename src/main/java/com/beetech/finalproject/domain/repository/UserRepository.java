@@ -29,7 +29,7 @@ public interface UserRepository extends CrudRepository<User, String>, ListCrudRe
     Optional<User> findByUsername(String username);
 
     @Query(value = "SELECT u.user_id, \n" +
-            "u.login_id, u.username,u.birth_day," +
+            "u.login_id, u.username, u.birth_day," +
             "u.delete_flag, u.log_flag, u.old_login_id, u.password, u.role,\n" +
             "SUM(od.total_price) AS totalPrice\n" +
             "FROM User u \n" +

@@ -7,6 +7,7 @@ import com.beetech.finalproject.domain.entities.User;
 import com.beetech.finalproject.domain.enums.Roles;
 import com.beetech.finalproject.domain.repository.UserRepository;
 import com.beetech.finalproject.utils.CustomDateTimeFormatter;
+import com.beetech.finalproject.web.dtos.user.UserChangePasswordDto;
 import com.beetech.finalproject.web.dtos.user.UserCreateDto;
 import com.beetech.finalproject.web.dtos.user.UserRetrieveDto;
 import com.beetech.finalproject.web.dtos.user.UserSearchDto;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -80,6 +82,31 @@ public class UserService {
                 throw new AccountException(AccountException.ErrorStatus.LOCKED_ACCOUNT, "The email is already registered and the account is locked.");
             }
         }
+    }
+
+    /**
+     * change password
+     *
+     * @param userChangePasswordDto - input password
+     * @param user - authentication
+     * @return - user
+     */
+    public User changePassword(UserChangePasswordDto userChangePasswordDto, User user) {
+        User existingUser = user;
+        String oldPassword = userChangePasswordDto.getOldPassword();
+
+        // Use BCrypt's built-in method to verify the old password
+        if (BCrypt.checkpw(oldPassword, existingUser.getPassword())) {
+            String newPassword = userChangePasswordDto.getPassword();
+            String encodedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+            existingUser.setPassword(encodedNewPassword);
+            userRepository.save(existingUser);
+            log.info("Change password success");
+        } else {
+            log.error("Old password is not correct");
+            throw new RuntimeException("Old password is not correct");
+        }
+        return existingUser;
     }
 
     /**

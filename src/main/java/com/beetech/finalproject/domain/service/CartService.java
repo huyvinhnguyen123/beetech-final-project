@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -65,8 +66,6 @@ public class CartService {
      */
     @Transactional
     public CartRetrieveCreateDto addProductToCart(CartCreateDto cartCreateDto, User user) {
-        Cart cart = createCart();
-
         Product existingProduct = productRepository.findById(cartCreateDto.getProductId()).orElseThrow(
                 ()->{
                     log.error("Not found this product");
@@ -77,32 +76,67 @@ public class CartService {
 
         User existingUser = user;
 
-        cart.setUser(existingUser);
-        cartRepository.save(cart);
-        log.info("Update cart with user success");
+        Cart existingCart = existingUser.getCart();
 
-        CartDetail cartDetail = new CartDetail();
-        cartDetail.setCart(cart);
-        cartDetail.setProduct(existingProduct);
-        cartDetail.setQuantity(cartCreateDto.getQuantity());
-        cartDetail.setPrice(existingProduct.getPrice());
-        cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
-        cartDetail.setStatusCode(Status.ACTIVE.getCode());
-        cartDetailRepository.save(cartDetail);
-        log.info("Save new cart detail success");
+        if(existingCart == null) {
+            Cart cart = createCart();
 
-        cart.setTotalPrice(cartDetail.getTotalPrice());
-        cart.setVersionNo(cart.getVersionNo() + 1);
-        cartRepository.save(cart);
-        log.info("save update cart success");
+            cart.setUser(existingUser);
+            cartRepository.save(cart);
+            log.info("Update cart with user success");
 
-        CartRetrieveCreateDto cartRetrieveCreateDto = new CartRetrieveCreateDto();
-        cartRetrieveCreateDto.setToken(cart.getToken());
-        cartRetrieveCreateDto.setTotalPrice(cart.getTotalPrice());
-        cartRetrieveCreateDto.setVersionNo(cart.getVersionNo());
-        log.info("Add new product to cart success");
+            CartDetail cartDetail = new CartDetail();
+            cartDetail.setCart(cart);
+            cartDetail.setProduct(existingProduct);
+            cartDetail.setQuantity(cartCreateDto.getQuantity());
+            cartDetail.setPrice(existingProduct.getPrice());
+            cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
+            cartDetail.setStatusCode(Status.ACTIVE.getCode());
+            cartDetailRepository.save(cartDetail);
+            log.info("Save new cart detail success");
 
-        return cartRetrieveCreateDto;
+            cart.setTotalPrice(cartDetail.getTotalPrice());
+            cart.setVersionNo(cart.getVersionNo() + 1);
+            cartRepository.save(cart);
+            log.info("save update cart success");
+
+            CartRetrieveCreateDto cartRetrieveCreateDto = new CartRetrieveCreateDto();
+            cartRetrieveCreateDto.setToken(cart.getToken());
+            cartRetrieveCreateDto.setTotalPrice(cart.getTotalPrice());
+            cartRetrieveCreateDto.setVersionNo(cart.getVersionNo());
+            log.info("Add new product to cart success");
+
+            return cartRetrieveCreateDto;
+        } else {
+            for(CartDetail cartDetail: existingCart.getCartDetails()) {
+                cartDetail.setCart(existingCart);
+                cartDetail.setProduct(existingProduct);
+
+                if(cartDetail.getProduct().getProductId().equals(existingProduct.getProductId())) {
+                    cartDetail.setQuantity(cartCreateDto.getQuantity() + cartDetail.getQuantity());
+                } else {
+                    cartDetail.setQuantity(cartCreateDto.getQuantity());
+                    cartDetail.setPrice(existingProduct.getPrice());
+                }
+                cartDetail.setTotalPrice(cartDetail.getPrice() * cartDetail.getQuantity());
+                cartDetail.setStatusCode(Status.ACTIVE.getCode());
+                cartDetailRepository.save(cartDetail);
+                log.info("Save new cart detail success");
+
+                existingCart.setTotalPrice(cartDetail.getTotalPrice());
+                existingCart.setVersionNo(existingCart.getVersionNo() + 1);
+                cartRepository.save(existingCart);
+                log.info("save update cart success");
+            }
+
+            CartRetrieveCreateDto cartRetrieveCreateDto = new CartRetrieveCreateDto();
+            cartRetrieveCreateDto.setToken(existingCart.getToken());
+            cartRetrieveCreateDto.setTotalPrice(existingCart.getTotalPrice());
+            cartRetrieveCreateDto.setVersionNo(existingCart.getVersionNo());
+            log.info("Add new product to cart success");
+
+            return cartRetrieveCreateDto;
+        }
     }
 
     /**
@@ -435,35 +469,47 @@ public class CartService {
         Cart cartWithoutLogin = cartRepository.findByToken(cartDeleteDto.getToken());
 
         // Check if clearCart equal 1 then delete cart and cart detail
-        if(cartDeleteDto.getClearCart() == 1){
+        if (cartDeleteDto.getClearCart() == 1) {
             // Check if cart is null
-            if(cartLogin == null && cartWithoutLogin == null) {
+            if (cartLogin == null && cartWithoutLogin == null) {
                 log.error("Not found cart");
                 throw new NullPointerException("Can't delete cart because can't get cart from user");
-            }  else if(cartLogin != null) { // For cart login
-                for(CartDetail cartDetail: cartLogin.getCartDetails()) {
-                    if(cartDetail.getCartDetailId().equals(cartDeleteDto.getDetailId())){
+            } else if (cartLogin != null) { // For cart login
+                Iterator<CartDetail> iterator = cartLogin.getCartDetails().iterator();
+                while (iterator.hasNext()) {
+                    CartDetail cartDetail = iterator.next();
+                    if (cartDetail.getCartDetailId().equals(cartDeleteDto.getDetailId())) {
+                        iterator.remove(); // Remove the cart detail from the cart's list of details
+                        cartDetail.setCart(null);
                         cartDetailRepository.deleteById(cartDetail.getCartDetailId());
                         log.info("Delete detail cart while user login success");
 
                         cartRetrieveSyncDto.setTotalQuantity(cartDetail.getQuantity());
                     }
                 }
-                if(cartLogin.getVersionNo().equals(cartDeleteDto.getVersionNo())) {
-                    cartRepository.deleteById(cartLogin.getCartId());
+                if (cartLogin.getVersionNo().equals(cartDeleteDto.getVersionNo())) {
+                    cartLogin.setUser(null);
+                    cartRepository.save(cartLogin);
+                    cartRepository.delete(cartLogin); // Delete the cart
                     log.info("Delete cart while user login success");
                 }
-            } else if(cartWithoutLogin != null) { // For cart without login
-                for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
-                    if(cartDetail.getCartDetailId().equals(cartDeleteDto.getDetailId())){
+            } else if (cartWithoutLogin != null) { // For cart without login
+                Iterator<CartDetail> iterator = cartWithoutLogin.getCartDetails().iterator();
+                while (iterator.hasNext()) {
+                    CartDetail cartDetail = iterator.next();
+                    if (cartDetail.getCartDetailId().equals(cartDeleteDto.getDetailId())) {
+                        iterator.remove(); // Remove the cart detail from the cart's list of details
+                        cartDetail.setCart(null);
                         cartDetailRepository.deleteById(cartDetail.getCartDetailId());
                         log.info("Delete detail cart without login success");
 
                         cartRetrieveSyncDto.setTotalQuantity(cartDetail.getQuantity());
                     }
                 }
-                if(cartWithoutLogin.getVersionNo().equals(cartDeleteDto.getVersionNo())) {
-                    cartRepository.deleteById(cartLogin.getCartId());
+                if (cartWithoutLogin.getVersionNo().equals(cartDeleteDto.getVersionNo())) {
+                    cartWithoutLogin.setUser(null);
+                    cartRepository.save(cartWithoutLogin);
+                    cartRepository.delete(cartWithoutLogin); // Delete the cart
                     log.info("Delete cart without login success");
                 }
             }
@@ -475,7 +521,7 @@ public class CartService {
             if(cartLogin == null && cartWithoutLogin == null) { // Check if cart is null
                 log.error("Not found cart");
                 throw new NullPointerException("Can't delete cart because can't get cart from user");
-            }else if(cartLogin != null && cartWithoutLogin == null) { // For cart login
+            }else if(cartLogin != null) { // For cart login
 
                 double totalPriceSum = 0.0;
                 for(CartDetail cartDetail: cartLogin.getCartDetails()) {
@@ -486,10 +532,12 @@ public class CartService {
 
                 // Delete the cart details outside the loop
                 for (CartDetail cartDetail : cartDetailsToDelete) {
-                    cartLogin.getCartDetails().remove(cartDetail);
-                    cartDetail.setCart(null);
-                    cartDetailRepository.delete(cartDetail);
-                    log.info("Delete detail cart while user login success");
+                    if(cartDetail.getCartDetailId().equals(cartDeleteDto.getDetailId())) {
+                        cartLogin.getCartDetails().remove(cartDetail);
+                        cartDetail.setCart(null);
+                        cartDetailRepository.delete(cartDetail);
+                        log.info("Delete detail cart while user login success");
+                    }
                 }
 
                 cartLogin.setTotalPrice(totalPriceSum);
@@ -497,7 +545,7 @@ public class CartService {
                 cartRepository.save(cartLogin);
                 log.info("update cart while user login success");
 
-            } else if(cartLogin == null && cartWithoutLogin != null) { // For cart without login
+            } else if(cartWithoutLogin != null) { // For cart without login
 
                 double totalPriceSum = 0.0;
                 for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
