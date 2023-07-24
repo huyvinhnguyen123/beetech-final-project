@@ -15,6 +15,7 @@ import com.beetech.finalproject.web.dtos.category.CategoryUpdateDto;
 import com.beetech.finalproject.web.dtos.category.ImageRetrieveDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,9 @@ public class CategoryService {
     private final ImageForCategoryRepository imageForCategoryRepository;
     private final CategoryImageRepository categoryImageRepository;
 
+    @Value("${spring.folder.category}")
+    private String categoryPath;
+
     /**
      * upload image for category
      *
@@ -51,7 +55,7 @@ public class CategoryService {
             }
 
             // Get the value of the file.upload.directory property
-            String uploadDirectory = "src/main/resources/upload/category";
+            String uploadDirectory = categoryPath;
 
             // Create the upload directory if it doesn't exist
             Path uploadDirectoryPath = Paths.get(uploadDirectory);
@@ -72,7 +76,7 @@ public class CategoryService {
             // upload file to folder
             Files.copy(file.getInputStream(), filePath);
 
-            String fileUrl = "src/main/resources/upload/category/" + fileName;
+            String fileUrl = categoryPath + fileName;
             return fileUrl;
         } catch (IOException e) {
             log.error("Failed to upload file: " + e.getMessage());

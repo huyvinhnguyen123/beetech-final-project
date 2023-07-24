@@ -6,6 +6,7 @@ import com.beetech.finalproject.domain.repository.*;
 import com.beetech.finalproject.web.dtos.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,9 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final DetailImageRepository detailImageRepository;
 
+    @Value("${spring.folder.product}")
+    private String productPath;
+
     /**
      * upload image for product
      *
@@ -42,7 +46,7 @@ public class ProductService {
             String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
             // Get the value of the file.upload.directory property
-            String uploadDirectory = "src/main/resources/upload/product";
+            String uploadDirectory = productPath;
 
             // Create the upload directory if it doesn't exist
             Path uploadDirectoryPath = Paths.get(uploadDirectory);
@@ -66,7 +70,7 @@ public class ProductService {
             // upload file to folder
             Files.copy(file.getInputStream(), filePath);
 
-            String fileUrl = "src/main/resources/upload/product/" + fileName;
+            String fileUrl = productPath + fileName;
             return fileUrl;
         } catch (IOException e) {
             log.error("Failed to upload file: " + e.getMessage());
