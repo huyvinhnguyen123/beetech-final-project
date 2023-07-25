@@ -255,12 +255,12 @@ public class CartService {
             syncCartDetail(mapProductIdCartDetail.get(getProductId(cartDetail)), cartDetail, user);
         }
 
-        List<CartDetail> newForUserCart = temporaryCartDetail.stream()
+        List<CartDetail> newCartDetailForUserCart = temporaryCartDetail.stream()
                 .filter(cartDetail -> !mapProductIdCartDetail.containsKey(getProductId(cartDetail)))
                 .toList();
-        for (CartDetail cartDetail : existsInUserCart) {
+        for (CartDetail cartDetail : newCartDetailForUserCart) {
             // register new with user cart
-            // TODO Huy complete here
+            createNewCartDetailForUser(cartDetail, user);
         }
     }
 
