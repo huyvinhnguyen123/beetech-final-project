@@ -6,6 +6,7 @@ import com.beetech.finalproject.domain.repository.CartDetailRepository;
 import com.beetech.finalproject.domain.repository.CartRepository;
 import com.beetech.finalproject.domain.repository.ProductRepository;
 import com.beetech.finalproject.domain.repository.UserRepository;
+import com.beetech.finalproject.exception.NotFoundException;
 import com.beetech.finalproject.utils.CustomGenerate;
 import com.beetech.finalproject.web.dtos.cart.*;
 import com.beetech.finalproject.web.security.JwtUtils;
@@ -14,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -158,7 +159,8 @@ public class CartService {
         log.info("Found product");
 
         log.info("Not authentication");
-        Cart cartWithoutLogin = cartRepository.findByToken(cartCreateDto.getToken());
+        Cart cartWithoutLogin = cartRepository.findByToken(cartCreateDto.getToken())
+                .orElseThrow(() -> new NotFoundException("Can not found cart"));
         log.info("Get new cart success");
 
         CartDetail cartDetail = new CartDetail();
@@ -193,67 +195,90 @@ public class CartService {
      */
     @Transactional
     public CartRetrieveSyncDto syncCartAfterLogin(String token, User user) {
-        CartRetrieveSyncDto cartRetrieveSyncDto = new CartRetrieveSyncDto();
-
         // Get old cart from user
         Cart oldCart = user.getCart();
 
         // Get current cart without login
-        Cart cartWithoutLogin = cartRepository.findByToken(token);
-
-        int totalQuantity = 0;
-
-        // If old cart & current cart is null
-        if(oldCart == null || cartWithoutLogin == null || oldCart == null && cartWithoutLogin == null) {
-            log.info("cart is null");
+        Optional<Cart> cartWithoutLogin = cartRepository.findByToken(token);
+        if (cartWithoutLogin.isEmpty()) {
+            // Not handle anything
+            return new CartRetrieveSyncDto();
         }
 
-        // If old cart & current cart is not null
-        if(oldCart != null && cartWithoutLogin != null) {
-            for(CartDetail cartDetailWithoutLogin: cartWithoutLogin.getCartDetails()) {
-                boolean IsMatch = false;
-                for(CartDetail oldCartDetail: oldCart.getCartDetails()) {
-                    if(cartDetailWithoutLogin.getProduct().getProductId().equals(oldCartDetail.getProduct().getProductId())) {
-                        // Product id matches, update quantity
-                        oldCartDetail.setQuantity(oldCartDetail.getQuantity() + cartDetailWithoutLogin.getQuantity());
-                        oldCartDetail.setTotalPrice(oldCartDetail.getTotalPrice() + cartDetailWithoutLogin.getTotalPrice());
-                        IsMatch = true;
-                        log.info("Have same product - update quantity");
-
-                        totalQuantity += oldCartDetail.getQuantity();
-                        break;
-                    }
-                }
-                if(!IsMatch) {
-                    // Product id doesn't exist, create new cart detail
-                    cartDetailWithoutLogin.setCart(oldCart);
-                    oldCart.getCartDetails().add(cartDetailWithoutLogin);
-                    log.info("Haven't same product - add new cartDetail inside old cart");
-
-                    totalQuantity += cartDetailWithoutLogin.getQuantity();
-                }
-            }
-            // Update old cart in the database
-            cartRepository.save(oldCart);
-            log.info("Save old cart success");
+        // Then we have 2 cases: The current user already has items in their cart or has not added any yet.
+        if (oldCart == null) {
+            // For case has not added any yet.
+            createNewCartForUserFromTemporaryCart(cartWithoutLogin.get(), user);
+        } else {
+            // For case The current user already has items in their cart
+            syncUserCartWithTemporaryCart(oldCart, cartWithoutLogin.get(), user);
         }
 
-        cartRetrieveSyncDto.setTotalQuantity(totalQuantity);
-
-        // If current cart is exist and old cart is empty or null
-        if (cartWithoutLogin != null && (oldCart == null || oldCart.getCartDetails().isEmpty())) {
-            // User doesn't have an existing cart(old cart), update current cart
-            cartWithoutLogin.setUser(user);
-            cartWithoutLogin.setVersionNo(cartWithoutLogin.getVersionNo() + 1);
-            cartRepository.save(cartWithoutLogin);
-            log.info("Save current cart success");
-
-            for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
-                cartRetrieveSyncDto.setTotalQuantity(cartDetail.getQuantity());
-            }
-        }
-
+        CartRetrieveSyncDto cartRetrieveSyncDto = new CartRetrieveSyncDto();
+        // TODO Huy call repository to calculate total product for cart then return
         return cartRetrieveSyncDto;
+    }
+
+    /**
+     * Create new cart for login user when user has temporary card
+     *
+     * @param cartWithoutLogin temporary Cart
+     * @param user login user
+     */
+    private void createNewCartForUserFromTemporaryCart(Cart cartWithoutLogin, User user) {
+        cartWithoutLogin.setUser(user);
+        cartWithoutLogin.setVersionNo(cartWithoutLogin.getVersionNo() + 1);
+        cartRepository.save(cartWithoutLogin);
+        log.info("Save current cart success");
+    }
+
+    /**
+     * For case both user cart and cart without login has cart details, need to sync.
+     *
+     * @param userCart user cart
+     * @param cartWithoutLogin temporary cart
+     * @param user login user
+     */
+    private void syncUserCartWithTemporaryCart(Cart userCart, Cart cartWithoutLogin, User user) {
+        List<CartDetail> userCartDetail = userCart.getCartDetails();
+        Map<Long, CartDetail> mapProductIdCartDetail = userCartDetail.stream()
+                .collect(Collectors.toMap(this::getProductId, Function.identity()));
+
+        List<CartDetail> temporaryCartDetail = cartWithoutLogin.getCartDetails();
+
+        // Get all product exists in user cart
+        List<CartDetail> existsInUserCart = temporaryCartDetail.stream()
+                .filter(cartDetail -> mapProductIdCartDetail.containsKey(getProductId(cartDetail)))
+                .toList();
+        for (CartDetail cartDetail : existsInUserCart) {
+            // Product already exists in user cart, just need to update quantity and total price
+            syncCartDetail(mapProductIdCartDetail.get(getProductId(cartDetail)), cartDetail, user);
+        }
+
+        List<CartDetail> newCartDetailForUserCart = temporaryCartDetail.stream()
+                .filter(cartDetail -> !mapProductIdCartDetail.containsKey(getProductId(cartDetail)))
+                .toList();
+        for (CartDetail cartDetail : newCartDetailForUserCart) {
+            // register new with user cart
+            createNewCartDetailForUser(cartDetail, user);
+        }
+    }
+
+    /**
+     * From cart detail get product id
+     * @param cartDetail cart detail
+     * @return product id
+     */
+    private Long getProductId (CartDetail cartDetail) {
+        return cartDetail.getProduct().getProductId();
+    }
+
+    private void syncCartDetail(CartDetail userCartDetail, CartDetail temporaryCartDetail, User user) {
+        // TODO Huy complete here
+    }
+
+    private void createNewCartDetailForUser(CartDetail temporaryCartDetail, User user) {
+        // TODO Huy complete here
     }
 
     /**
@@ -271,7 +296,8 @@ public class CartService {
         User existingUser = user;
         if(existingUser == null) {
             log.info("Not authentication");
-            Cart cartWithoutLogin = cartRepository.findByToken(token);
+            Cart cartWithoutLogin = cartRepository.findByToken(token)
+                    .orElseThrow(() -> new NotFoundException("Can not found cart"));
             cartRetrieveDto.setCartId(cartWithoutLogin.getCartId());
             cartRetrieveDto.setTotalPrice(cartWithoutLogin.getTotalPrice());
             cartRetrieveDto.setVersionNo(cartWithoutLogin.getVersionNo());
@@ -358,7 +384,8 @@ public class CartService {
         User existingUser = user;
         if(existingUser == null) {
             log.info("Not authentication");
-            Cart cartWithoutLogin = cartRepository.findByToken(token);
+            Cart cartWithoutLogin = cartRepository.findByToken(token)
+                    .orElseThrow(() -> new NotFoundException("Can not found cart"));
 
             CartSumQuantityDto cartSumQuantityDto = new CartSumQuantityDto();
             int totalQuantitySum = 0;
@@ -401,7 +428,9 @@ public class CartService {
             int totalQuantity = 0;
             double totalPrice = 0.0;
 
-            Cart cartWithoutLogin = cartRepository.findByToken(cartUpdateDto.getToken());
+            Cart cartWithoutLogin = cartRepository.findByToken(cartUpdateDto.getToken())
+                    .orElseThrow(() -> new NotFoundException("Can not found cart"));
+
             if(cartWithoutLogin.getVersionNo().equals(cartUpdateDto.getVersionNo())) {
                 for(CartDetail cartDetail: cartWithoutLogin.getCartDetails()) {
                     if(cartDetail.getCartDetailId().equals(cartUpdateDto.getCartDetailId())) {
@@ -466,7 +495,9 @@ public class CartService {
         Cart cartLogin = existingUser.getCart();
 
         // Get cart without login
-        Cart cartWithoutLogin = cartRepository.findByToken(cartDeleteDto.getToken());
+        Cart cartWithoutLogin = cartRepository.findByToken(cartDeleteDto.getToken())
+                // Set null because use to check for ... later
+                .orElse(null);
 
         // Check if clearCart equal 1 then delete cart and cart detail
         if (cartDeleteDto.getClearCart() == 1) {

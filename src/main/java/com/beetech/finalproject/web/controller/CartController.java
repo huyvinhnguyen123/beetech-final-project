@@ -46,22 +46,16 @@ public class CartController {
     }
 
     @GetMapping("/sync-cart")
-    public ResponseEntity<ResponseDto<Object>> syncCartAfterLogin(@RequestBody String token) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public ResponseEntity<ResponseDto<Object>> syncCartAfterLogin(@RequestBody String token, Authentication authentication) {
         log.info("request syncing cart");
-        try {
-            User currentUser = (User) authentication.getPrincipal();
+        User currentUser = (User) authentication.getPrincipal();
 
-            CartRetrieveSyncDto cartRetrieveSyncDto = cartService.syncCartAfterLogin(token, currentUser);
-            CartResponseSync cartResponse = CartResponseSync.builder()
-                    .cartRetrieveSyncDto(cartRetrieveSyncDto)
-                    .build();
+        CartRetrieveSyncDto cartRetrieveSyncDto = cartService.syncCartAfterLogin(token, currentUser);
+        CartResponseSync cartResponse = CartResponseSync.builder()
+                .cartRetrieveSyncDto(cartRetrieveSyncDto)
+                .build();
 
-            return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
-        } catch (AuthenticationException e) {
-            log.error("Sync cart failed: " + e.getMessage());
-            throw new AuthException(AuthException.ErrorStatus.INVALID_GRANT);
-        }
+        return ResponseEntity.ok(ResponseDto.build().withData(cartResponse));
     }
 
     @PostMapping("/cart-info")
